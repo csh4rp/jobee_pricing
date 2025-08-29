@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+    <ItemGroup>
+      <ProjectReference Include="..\Jobee.Pricing.Application\Jobee.Pricing.Application.csproj" />
+      <ProjectReference Include="..\Jobee.Pricing.Contracts\Jobee.Pricing.Contracts.csproj" />
+      <ProjectReference Include="..\Jobee.Pricing.Domain\Jobee.Pricing.Domain.csproj" />
+      <ProjectReference Include="..\Jobee.Pricing.Infrastructure\Jobee.Pricing.Infrastructure.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+      <PackageReference Include="Jobee.Utils.Api" />
+      <PackageReference Include="Swashbuckle.AspNetCore" />
+      <PackageReference Include="WolverineFx" />
+      <PackageReference Include="WolverineFx.Marten" />
+    </ItemGroup>
+
+</Project>

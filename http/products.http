@@ -1,0 +1,47 @@
+POST http://localhost:5057/products
+Content-Type: application/json
+
+{
+  "name": "New Product",
+  "numberOfOffers": 1,
+  "isActive": true,
+  "prices": [
+    {
+      "startsAt": null,
+      "endsAt": null,
+      "amount": 100.0
+    }
+  ]
+}
+
+###
+
+PUT http://localhost:5057/products/0198c34b-3481-73a9-9700-0885cc26091f
+Content-Type: application/json
+
+{
+"name": "New Product1",
+"numberOfOffers": 1,
+"isActive": true,
+"prices": [
+    {
+      "id": "0198c34b-3482-7c80-9cda-e653b46d52a3",
+    "startsAt": null,
+    "endsAt": null,
+    "amount": 200.0
+    }
+  ]
+}
+
+###
+
+GET http://localhost:5057/products/0198c34b-3481-73a9-9700-0885cc26091f
+
+###
+
+POST http://localhost:5057/products/0198c34b-3481-73a9-9700-0885cc26091f/calculate-price
+Content-Type: application/json
+
+{
+  "timestamp": "2025-08-19T17:20:00Z"
+}

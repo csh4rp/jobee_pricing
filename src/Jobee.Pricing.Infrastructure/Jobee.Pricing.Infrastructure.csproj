@@ -1,0 +1,10 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <ItemGroup>
+      <ProjectReference Include="..\Jobee.Pricing.Contracts\Jobee.Pricing.Contracts.csproj" />
+      <ProjectReference Include="..\Jobee.Pricing.Domain\Jobee.Pricing.Domain.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+      <PackageReference Include="Jobee.Utils.Contracts" />
+      <PackageReference Include="WolverineFx.Marten" />
+    </ItemGroup>
+</Project>

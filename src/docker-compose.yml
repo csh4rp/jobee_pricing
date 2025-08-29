@@ -1,0 +1,16 @@
+version: '3.9'
+
+services:
+  database:
+    container_name: jobee_pricing_db
+    image: postgres:latest
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: Admin123!@#
+    volumes:
+      - database_data:/var/lib/postgresql/data
+        
+volumes:
+  database_data:

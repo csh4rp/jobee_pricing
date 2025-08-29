@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <ItemGroup>
+      <ProjectReference Include="..\Jobee.Pricing.Contracts\Jobee.Pricing.Contracts.csproj" />
+      <ProjectReference Include="..\Jobee.Pricing.Domain\Jobee.Pricing.Domain.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+      <PackageReference Include="FluentValidation" />
+      <PackageReference Include="WolverineFx" />
+    </ItemGroup>
+    <ItemGroup>
+      <Reference Include="Jobee.Utils.Api">
+        <HintPath>..\..\..\..\..\.nuget\packages\jobee.utils.api\1.0.0\lib\net9.0\Jobee.Utils.Api.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+</Project>
