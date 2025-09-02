@@ -39,8 +39,8 @@ public class ProductProjection : SingleStreamProjection<ProductProjectionModel, 
         {
             Id = @event.Data.Id,
             Amount = @event.Data.Amount,
-            StartsAt = @event.Data.DateRange.StartsAt,
-            EndsAt = @event.Data.DateRange.EndsAt
+            StartsAt = @event.Data.DateTimeRange.StartsAt,
+            EndsAt = @event.Data.DateTimeRange.EndsAt
         };
     }
     
@@ -51,8 +51,8 @@ public class ProductProjection : SingleStreamProjection<ProductProjectionModel, 
         {
             Id = @event.Data.Id,
             Amount = @event.Data.Amount,
-            StartsAt = @event.Data.DateRange.StartsAt,
-            EndsAt = @event.Data.DateRange.EndsAt
+            StartsAt = @event.Data.DateTimeRange.StartsAt,
+            EndsAt = @event.Data.DateTimeRange.EndsAt
         });
     }
     
@@ -77,8 +77,8 @@ public class ProductProjection : SingleStreamProjection<ProductProjectionModel, 
             {
                 Id = price.Id,
                 Amount = price.Amount,
-                StartsAt = price.DateRange.StartsAt,
-                EndsAt = price.DateRange.EndsAt
+                StartsAt = price.DateTimeRange.StartsAt,
+                EndsAt = price.DateTimeRange.EndsAt
             }).ToList()
         };
     }

@@ -6,18 +6,18 @@ public record Price
 {
     public Guid Id { get; init; }
     
-    public DateRange DateRange { get; init; }
+    public DateTimeRange DateTimeRange { get; init; }
     
     public decimal Amount { get; init; }
 
-    public bool IsDefault => DateRange.StartsAt == null && DateRange.EndsAt == null;
+    public bool IsDefault => DateTimeRange.StartsAt == null && DateTimeRange.EndsAt == null;
     
-    public Price(Guid id, DateRange dateRange, decimal amount)
+    public Price(Guid id, DateTimeRange dateTimeRange, decimal amount)
     {
         Id = id;
-        DateRange = dateRange;
+        DateTimeRange = dateTimeRange;
         Amount = amount;
     }
     
-    public static Price Default(decimal amount) => new(Guid.CreateVersion7(), new  DateRange(null, null), amount);
+    public static Price Default(decimal amount) => new(Guid.CreateVersion7(), new  DateTimeRange(null, null), amount);
 }

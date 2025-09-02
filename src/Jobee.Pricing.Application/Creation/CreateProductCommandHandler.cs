@@ -1,10 +1,11 @@
 using Jobee.Pricing.Contracts.Commands;
+using Jobee.Pricing.Contracts.Creation;
 using Jobee.Pricing.Domain;
 using Jobee.Pricing.Domain.ValueObjects;
 using Jobee.Utils.Contracts.Responses;
 using Microsoft.Extensions.Logging;
 
-namespace Jobee.Pricing.Application.Handlers;
+namespace Jobee.Pricing.Application.Creation;
 
 public class CreateProductCommandHandler
 {
@@ -18,7 +19,7 @@ public class CreateProductCommandHandler
             request.Name,
             request.NumberOfOffers,
             request.IsActive,
-            request.Prices.Select(price => new Price(Guid.CreateVersion7(), new DateRange(price.StartsAt, price.EndsAt), price.Amount)).ToList());
+            [.. request.Prices.Select(price => new Price(Guid.CreateVersion7(), new DateTimeRange(price.StartsAt, price.EndsAt), price.Amount))]);
 
         await productRepository.AddAsync(product, cancellationToken);
         

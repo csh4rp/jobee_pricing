@@ -1,3 +1,5 @@
+using Jobee.Pricing.Domain.ValueObjects;
+
 namespace Jobee.Pricing.Domain;
 
 public interface IProductRepository
@@ -10,5 +12,5 @@ public interface IProductRepository
     
     Task<Product> GetByIdAsync(Guid id, CancellationToken cancellationToken);
 
-    Task<Product> GetByIdAsync(Guid id, DateTimeOffset timestamp, CancellationToken cancellationToken);
+    Task<Product> GetByVersionAsync(ProductVersion version, CancellationToken cancellationToken);
 }

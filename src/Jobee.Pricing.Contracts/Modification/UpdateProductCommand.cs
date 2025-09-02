@@ -1,6 +1,4 @@
-using Jobee.Pricing.Contracts.Models;
-
-namespace Jobee.Pricing.Contracts.Commands;
+namespace Jobee.Pricing.Contracts.Modification;
 
 public record UpdateProductCommand
 {
@@ -12,7 +10,7 @@ public record UpdateProductCommand
     
     public required bool IsActive { get; init; }
     
-    public required IReadOnlyList<PriceModel> Prices { get; init; }
+    public required IReadOnlyList<UpdatePriceModel> Prices { get; init; }
     
     public void SetProductId(Guid id) => ProductId = id;
 }

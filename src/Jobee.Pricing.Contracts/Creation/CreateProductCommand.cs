@@ -1,6 +1,4 @@
-using Jobee.Pricing.Contracts.Models;
-
-namespace Jobee.Pricing.Contracts.Commands;
+namespace Jobee.Pricing.Contracts.Creation;
 
 public record CreateProductCommand
 {

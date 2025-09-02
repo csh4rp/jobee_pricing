@@ -1,5 +1,7 @@
 using Jobee.Pricing.Contracts.Commands;
+using Jobee.Pricing.Contracts.Creation;
 using Jobee.Pricing.Contracts.Models;
+using Jobee.Pricing.Contracts.Modification;
 using Jobee.Pricing.Contracts.Queries;
 using Jobee.Utils.Api.ApiResults;
 using Jobee.Utils.Api.Responses;
@@ -45,20 +47,17 @@ public static class ProductEndpointExtensions
             .Produces<ValidationErrorResponse>(StatusCodes.Status400BadRequest)
             .Produces<NotFoundErrorResponse>(StatusCodes.Status404NotFound);
 
-        group.MapPost("{id:guid}/calculate-price", async ([FromBody] CalculatePriceCommand command,
+        group.MapPost("calculate-price", async ([FromBody] CalculatePriceCommand command,
                 [FromRoute] Guid id,
                 IMessageBus bus,
                 CancellationToken cancellationToken) =>
             {
-                command.SetProductId(id);
-
                 var result = await bus.InvokeAsync<PriceCalculationResult>(command, cancellationToken);
                 return Results.Ok(result);
             })
             .AddEndpointFilter<ValidationEndpointFilter<CalculatePriceCommand>>()
             .Produces<PriceCalculationResult>(StatusCodes.Status200OK)
             .Produces<ValidationErrorResponse>(StatusCodes.Status400BadRequest);
-        ;
 
         group.MapDelete("{id:guid}", async ([FromRoute] Guid id,
                 IMessageBus bus,

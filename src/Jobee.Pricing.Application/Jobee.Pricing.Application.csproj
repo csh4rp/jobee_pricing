@@ -6,10 +6,10 @@
     <ItemGroup>
       <PackageReference Include="FluentValidation" />
       <PackageReference Include="WolverineFx" />
+      <PackageReference Include="Jobee.Utils.Api" />
     </ItemGroup>
     <ItemGroup>
-      <Reference Include="Jobee.Utils.Api">
-        <HintPath>..\..\..\..\..\.nuget\packages\jobee.utils.api\1.0.0\lib\net9.0\Jobee.Utils.Api.dll</HintPath>
-      </Reference>
+      <Folder Include="Handlers\" />
+      <Folder Include="Validators\" />
     </ItemGroup>
 </Project>

@@ -3,7 +3,7 @@ using Jobee.Pricing.Domain;
 using Microsoft.Extensions.Logging;
 using Wolverine.Attributes;
 
-namespace Jobee.Pricing.Application.Handlers;
+namespace Jobee.Pricing.Application.Archiving;
 
 public class ArchiveProductCommandHandler
 {

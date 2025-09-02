@@ -1,11 +1,13 @@
 using Jobee.Pricing.Domain.Events;
+using Jobee.Pricing.Domain.ValueObjects;
 
 namespace Jobee.Pricing.Domain;
 
 public class Product
 {
     private readonly Queue<object> _events = [];
-    private readonly List<Price> _prices = [];
+    private readonly List<Price> _prices;
+    private int _version;
     
     public Guid Id { get; private init; }
     
@@ -15,6 +17,9 @@ public class Product
     
     public int NumberOfOffers { get; private set; }
     
+    public IReadOnlyList<Price> Prices => _prices;
+
+    public ProductVersion Version => new(Id, _version);
 
     public Product(ProductCreated @event)
     {
@@ -22,7 +27,7 @@ public class Product
         IsActive = @event.IsActive;
         Name = @event.Name;
         NumberOfOffers = @event.NumberOfOffers;
-        _prices = [.. @event.Prices.Select(p => new Price(p.Id, p.DateRange, p.Amount))];
+        _prices = [.. @event.Prices.Select(p => new Price(p.Id, p.DateTimeRange, p.Amount))];
     }
     
     public Product(Guid id, string name, int numberOfOffers, bool isActive, IReadOnlyList<Price> prices)
@@ -33,15 +38,20 @@ public class Product
         IsActive = isActive;
         Name = name;
         NumberOfOffers = numberOfOffers;
-        _prices = prices as List<Price> ?? prices.ToList();
+        _prices = prices as List<Price> ?? [.. prices];
         _events.Enqueue(new ProductCreated(id, name, numberOfOffers, isActive, prices));
     }
 
     private static void ValidatePrices(IReadOnlyCollection<Price> prices)
     {
+        if (prices.Count(p => p.IsDefault) != 1)
+        {
+            throw new ArgumentException("Only one default price is allowed.");
+        }
+        
         foreach (var price in prices)
         {
-            if (prices.Any(p => p.Id != price.Id && !p.IsDefault && p.DateRange.Overlaps(price.DateRange)))
+            if (prices.Any(p => p.Id != price.Id && !p.IsDefault && !price.IsDefault && p.DateTimeRange.Overlaps(price.DateTimeRange)))
             {
                 throw new ArgumentException($"Price with ID {price.Id} overlaps with another price in the collection.");
             }
@@ -62,6 +72,7 @@ public class Product
         if (isActive != IsActive)
         {
             IsActive = isActive;
+            _events.Enqueue(isActive ? new ProductActivated() : new ProductDeactivated());
         }
 
         foreach (var price in prices)
@@ -69,11 +80,11 @@ public class Product
             var existingPrice = _prices.FirstOrDefault(p => p.Id == price.Id);
             if (existingPrice is not null && !existingPrice.Equals(price))
             {
-                _events.Enqueue(new PriceChanged(existingPrice.Id, existingPrice.DateRange, price.Amount));
+                _events.Enqueue(new PriceChanged(existingPrice.Id, existingPrice.DateTimeRange, price.Amount));
             }
-            else
+            else if (existingPrice is null)
             {
-                _events.Enqueue(new PriceCreated(price.Id, price.DateRange, price.Amount));
+                _events.Enqueue(new PriceCreated(price.Id, price.DateTimeRange, price.Amount));
             }
         }
 
@@ -82,33 +93,35 @@ public class Product
             var isPriceRemoved = prices.All(p => p.Id != price.Id);
             if (isPriceRemoved)
             {
-                _events.Enqueue(new PriceRemoved(price.Id, price.DateRange, price.Amount));
+                _events.Enqueue(new PriceRemoved(price.Id, price.DateTimeRange, price.Amount));
             }
         }
     }
 
-    public decimal GetPrice(DateTimeOffset timestamp)
+    public Price GetPrice(DateTimeOffset timestamp)
     {
         var price = _prices.Where(p => 
-            p.DateRange.Overlaps(timestamp))
-            .OrderBy(t => t.IsDefault ? 0 : 1)
+            p.DateTimeRange.Overlaps(timestamp))
+            .OrderBy(t => t.IsDefault ? 1 : 0)
             .First();
 
-        return price.Amount;
+        return price;
     }
 
     public void Apply(ProductChanged @event)
     {
         Name = @event.Name;
         NumberOfOffers = @event.NumberOfOffers;
+        _version++;
     }
     
     public void Apply(PriceCreated @event)
     {
         _prices.Add(new Price(
             @event.Id,
-            @event.DateRange,
+            @event.DateTimeRange,
             @event.Amount));
+        _version++;
     }
     
     public void Apply(PriceRemoved @event)
@@ -118,6 +131,7 @@ public class Product
         {
             _prices.Remove(price);
         }
+        _version++;
     }
     
     public void Apply(PriceChanged @event)
@@ -131,8 +145,21 @@ public class Product
         _prices.Remove(price);
         _prices.Add(new Price(
             @event.Id,
-            @event.DateRange,
+            @event.DateTimeRange,
             @event.Amount));
+        _version++;
+    }
+    
+    public void Apply(ProductActivated _)
+    {
+        IsActive = true;
+        _version++;
+    }
+    
+    public void Apply(ProductDeactivated _)
+    {
+        IsActive = false;
+        _version++;
     }
     
     public IEnumerable<object> DequeueEvents()

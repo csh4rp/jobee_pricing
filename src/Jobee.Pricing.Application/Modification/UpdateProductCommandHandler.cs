@@ -1,9 +1,10 @@
 using Jobee.Pricing.Contracts.Commands;
+using Jobee.Pricing.Contracts.Modification;
 using Jobee.Pricing.Domain;
 using Jobee.Pricing.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
 
-namespace Jobee.Pricing.Application.Handlers;
+namespace Jobee.Pricing.Application.Modification;
 
 public class UpdateProductCommandHandler
 {
@@ -18,7 +19,7 @@ public class UpdateProductCommandHandler
             request.Name,
             request.NumberOfOffers,
             request.IsActive,
-            [.. request.Prices.Select(price => new Price(Guid.CreateVersion7(), new DateRange(price.StartsAt, price.EndsAt), price.Amount))]);
+            [.. request.Prices.Select(price => new Price(price.Id ?? Guid.CreateVersion7(), new DateTimeRange(price.StartsAt, price.EndsAt), price.Amount))]);
 
         await productRepository.UpdateAsync(product, cancellationToken);
         

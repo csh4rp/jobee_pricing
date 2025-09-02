@@ -1,7 +1,11 @@
-namespace Jobee.Pricing.Contracts.Models;
+using Jobee.Pricing.Contracts.Common;
 
-public record CreatePriceModel
+namespace Jobee.Pricing.Contracts.Modification;
+
+public record UpdatePriceModel : IPriceModel
 {
+    public required Guid? Id { get; init; }
+    
     public required DateTimeOffset? StartsAt { get; init; }
     
     public required DateTimeOffset? EndsAt { get; init; }
