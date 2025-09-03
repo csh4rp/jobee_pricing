@@ -18,9 +18,7 @@ public class Product
     public int NumberOfOffers { get; private set; }
     
     public IReadOnlyList<Price> Prices => _prices;
-
-    public ProductVersion Version => new(Id, _version);
-
+    
     public Product(ProductCreated @event)
     {
         Id = @event.Id;

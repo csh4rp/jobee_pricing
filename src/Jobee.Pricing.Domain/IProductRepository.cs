@@ -12,5 +12,5 @@ public interface IProductRepository
     
     Task<Product> GetByIdAsync(Guid id, CancellationToken cancellationToken);
 
-    Task<Product> GetByVersionAsync(ProductVersion version, CancellationToken cancellationToken);
+    Task<Product> GetByIdAsync(Guid id, DateTimeOffset timestamp, CancellationToken cancellationToken);
 }

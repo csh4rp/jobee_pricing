@@ -3,6 +3,7 @@ using Jobee.Pricing.Contracts.Commands;
 using Jobee.Pricing.Contracts.Models;
 using Jobee.Pricing.Contracts.Modification;
 using Jobee.Pricing.Domain;
+using Jobee.Pricing.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 
@@ -51,5 +52,5 @@ public class UpdateProductCommandHandlerTests
         "Test Product",
         1,
         true,
-        []);
+        [new Price(Guid.CreateVersion7(), new DateTimeRange(), 100)]);
 }

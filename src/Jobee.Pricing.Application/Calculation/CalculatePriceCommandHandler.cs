@@ -7,14 +7,14 @@ namespace Jobee.Pricing.Application.Calculation;
 
 public class CalculatePriceCommandHandler
 {
-    public async Task<PriceCalculationResult> Handle(CalculatePriceCommand request,
+    public static async Task<PriceCalculationResult> Handle(CalculatePriceCommand request,
         IProductRepository productRepository,
         TimeProvider timeProvider,
         CancellationToken cancellationToken)
     {
-        var productVersion = new ProductVersion(request.ProductVersion);
-        
-        var product = await productRepository.GetByVersionAsync(productVersion, cancellationToken);
+        var product = request.PurchasedAt.HasValue 
+            ? await productRepository.GetByIdAsync(request.ProductId, request.PurchasedAt.Value, cancellationToken)
+            : await productRepository.GetByIdAsync(request.ProductId, cancellationToken);
         
         var price = product.GetPrice(timeProvider.GetUtcNow());
 

@@ -1,6 +1,7 @@
 using Jobee.Pricing.Application.Archiving;
 using Jobee.Pricing.Contracts.Commands;
 using Jobee.Pricing.Domain;
+using Jobee.Pricing.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 
@@ -34,6 +35,6 @@ public class ArchiveProductCommandHandlerTests
         "Test Product",
         1,
         true,
-        []);
+        [new Price(Guid.CreateVersion7(), new DateTimeRange(), 100)]);
 
 }

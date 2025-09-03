@@ -46,12 +46,12 @@ public class ProductRepository : IProductRepository
                       ?? throw new EntityNotFoundException(nameof(Product), id);
     }
 
-    public async Task<Product> GetByVersionAsync(ProductVersion version, CancellationToken cancellationToken)
+    public async Task<Product> GetByIdAsync(Guid id, DateTimeOffset timestamp, CancellationToken cancellationToken)
     {
         await using var session = _documentStore.LightweightSession();
-        return await session.Events.AggregateStreamAsync<Product>(version.Id,
-                   version: version.Number,
+        return await session.Events.AggregateStreamAsync<Product>(id,
+                   timestamp: timestamp,
                    token: cancellationToken)
-               ?? throw new EntityNotFoundException(nameof(ProductVersion), version);
+               ?? throw new EntityNotFoundException(nameof(Product), $"{id}-{timestamp:O}");
     }
 }
