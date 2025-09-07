@@ -1,3 +1,3 @@
-namespace Jobee.Pricing.Contracts.Commands;
+namespace Jobee.Pricing.Contracts.Archiving;
 
 public record ArchiveProductCommand(Guid Id);

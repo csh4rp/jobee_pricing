@@ -1,19 +1,17 @@
 using System.Reflection;
 using JasperFx;
-using JasperFx.Events.Projections;
-using Jobee.Pricing.Api;
 using Jobee.Pricing.Api.Endpoints;
 using Jobee.Pricing.Infrastructure;
-using Jobee.Pricing.Infrastructure.DataAccess;
-using Marten;
+using Jobee.Utils.Api;
 using Wolverine;
-using Wolverine.Marten;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddInfrastructure(builder.Configuration)
     .AddEndpointsApiExplorer()
-    .AddSwaggerGen();
+    .AddSwaggerGen()
+    .AddExceptionHandlers()
+    .AddValidationUtils();
 
 builder.UseWolverine(o =>
 {

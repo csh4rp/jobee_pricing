@@ -1,6 +1,8 @@
 using Jobee.Pricing.Contracts.Models;
 using Jobee.Pricing.Contracts.Queries;
+using Jobee.Pricing.Domain.Entities;
 using Jobee.Pricing.Infrastructure.DataAccess.Models;
+using Jobee.Utils.Application.Exceptions;
 using Marten;
 
 namespace Jobee.Pricing.Infrastructure.DataAccess.Handlers;
@@ -14,7 +16,7 @@ public class GetProductQueryHandler
         await using var session = documentStore.LightweightSession();
         var product = await session.Query<ProductProjectionModel>()
             .FirstOrDefaultAsync(p => p.Id == request.Id, cancellationToken)
-            ?? throw new Exception("Product not found");
+            ?? throw new EntityNotFoundException(nameof(Product), request.Id);
 
         return new ProductDetailsModel
         {

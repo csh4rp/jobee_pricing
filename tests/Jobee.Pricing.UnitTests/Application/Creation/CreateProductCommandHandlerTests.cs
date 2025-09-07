@@ -1,13 +1,12 @@
 using AwesomeAssertions;
 using Jobee.Pricing.Application.Creation;
-using Jobee.Pricing.Contracts.Commands;
 using Jobee.Pricing.Contracts.Creation;
-using Jobee.Pricing.Contracts.Models;
 using Jobee.Pricing.Domain;
+using Jobee.Pricing.Domain.Entities;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 
-namespace Jobee.Pricing.UnitTests.Application.Handlers;
+namespace Jobee.Pricing.UnitTests.Application.Creation;
 
 public class CreateProductCommandHandlerTests
 {

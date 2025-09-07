@@ -1,5 +1,6 @@
 using JasperFx.Events;
 using Jobee.Pricing.Domain.Events;
+using Jobee.Pricing.Domain.ValueObjects;
 using Jobee.Pricing.Infrastructure.DataAccess.Models;
 using Marten.Events.Aggregation;
 
@@ -17,18 +18,21 @@ public class ProductProjection : SingleStreamProjection<ProductProjectionModel, 
         model.Name = @event.Data.Name;
         model.NumberOfOffers = @event.Data.NumberOfOffers;
         model.LastModifiedAt = @event.Timestamp;
+        model.VersionId = new ProductVersion(@event.Id, @event.Version).ToString();
     }
     
     public void Apply(IEvent<ProductActivated> @event, ProductProjectionModel model)
     {
         model.IsActive = true;
         model.LastModifiedAt = @event.Timestamp;
+        model.VersionId = new ProductVersion(@event.Id, @event.Version).ToString();
     }
     
     public void Apply(IEvent<ProductDeactivated> @event, ProductProjectionModel model)
     {
         model.IsActive = false;
         model.LastModifiedAt = @event.Timestamp;
+        model.VersionId = new ProductVersion(@event.Id, @event.Version).ToString();
     }
     
     public void Apply(IEvent<PriceChanged> @event, ProductProjectionModel model)
@@ -42,6 +46,7 @@ public class ProductProjection : SingleStreamProjection<ProductProjectionModel, 
             StartsAt = @event.Data.DateTimeRange.StartsAt,
             EndsAt = @event.Data.DateTimeRange.EndsAt
         };
+        model.VersionId = new ProductVersion(@event.Id, @event.Version).ToString();
     }
     
     public void Apply(IEvent<PriceCreated> @event, ProductProjectionModel model)
@@ -54,6 +59,7 @@ public class ProductProjection : SingleStreamProjection<ProductProjectionModel, 
             StartsAt = @event.Data.DateTimeRange.StartsAt,
             EndsAt = @event.Data.DateTimeRange.EndsAt
         });
+        model.VersionId = new ProductVersion(@event.Id, @event.Version).ToString();
     }
     
     public void Apply(IEvent<PriceRemoved> @event, ProductProjectionModel model)
@@ -61,6 +67,7 @@ public class ProductProjection : SingleStreamProjection<ProductProjectionModel, 
         model.LastModifiedAt = @event.Timestamp;
         var index = model.Prices.FindIndex(p => p.Id == @event.Data.Id);
         model.Prices.RemoveAt(index);
+        model.VersionId = new ProductVersion(@event.Id, @event.Version).ToString();
     }
     
     public ProductProjectionModel Create(IEvent<ProductCreated> @event)
@@ -68,18 +75,19 @@ public class ProductProjection : SingleStreamProjection<ProductProjectionModel, 
         return new ProductProjectionModel
         {
             Id = @event.Data.Id,
+            VersionId = new ProductVersion(@event.Id, @event.Version).ToString(),
             Name = @event.Data.Name,
             NumberOfOffers = @event.Data.NumberOfOffers,
             IsActive = @event.Data.IsActive,
             CreatedAt = @event.Timestamp,
             LastModifiedAt = null,
-            Prices = @event.Data.Prices.Select(price => new PriceProjectionModel
+            Prices = [.. @event.Data.Prices.Select(price => new PriceProjectionModel
             {
                 Id = price.Id,
                 Amount = price.Amount,
                 StartsAt = price.DateTimeRange.StartsAt,
                 EndsAt = price.DateTimeRange.EndsAt
-            }).ToList()
+            })]
         };
     }
 }

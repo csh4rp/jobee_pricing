@@ -1,14 +1,14 @@
 using Jobee.Pricing.Domain.Events;
 using Jobee.Pricing.Domain.ValueObjects;
 
-namespace Jobee.Pricing.Domain;
+namespace Jobee.Pricing.Domain.Entities;
 
 public class Product
 {
     private readonly Queue<object> _events = [];
     private readonly List<Price> _prices;
     private int _version;
-    
+
     public Guid Id { get; private init; }
     
     public bool IsActive { get; private set; }
@@ -18,6 +18,8 @@ public class Product
     public int NumberOfOffers { get; private set; }
     
     public IReadOnlyList<Price> Prices => _prices;
+    
+    public ProductVersion Version => new(Id, _version);
     
     public Product(ProductCreated @event)
     {
@@ -64,13 +66,13 @@ public class Product
         {
             Name = name;
             NumberOfOffers = numberOfOffers;
-            _events.Enqueue(new ProductChanged(name, numberOfOffers));
+            EnqueueEvent(new ProductChanged(name, numberOfOffers));
         }
 
         if (isActive != IsActive)
         {
             IsActive = isActive;
-            _events.Enqueue(isActive ? new ProductActivated() : new ProductDeactivated());
+            EnqueueEvent(isActive ? new ProductActivated() : new ProductDeactivated());
         }
 
         foreach (var price in prices)
@@ -78,11 +80,11 @@ public class Product
             var existingPrice = _prices.FirstOrDefault(p => p.Id == price.Id);
             if (existingPrice is not null && !existingPrice.Equals(price))
             {
-                _events.Enqueue(new PriceChanged(existingPrice.Id, existingPrice.DateTimeRange, price.Amount));
+                EnqueueEvent(new PriceChanged(existingPrice.Id, existingPrice.DateTimeRange, price.Amount));
             }
             else if (existingPrice is null)
             {
-                _events.Enqueue(new PriceCreated(price.Id, price.DateTimeRange, price.Amount));
+                EnqueueEvent(new PriceCreated(price.Id, price.DateTimeRange, price.Amount));
             }
         }
 
@@ -91,9 +93,15 @@ public class Product
             var isPriceRemoved = prices.All(p => p.Id != price.Id);
             if (isPriceRemoved)
             {
-                _events.Enqueue(new PriceRemoved(price.Id, price.DateTimeRange, price.Amount));
+                EnqueueEvent(new PriceRemoved(price.Id, price.DateTimeRange, price.Amount));
             }
         }
+    }
+    
+    private void EnqueueEvent(object @event)
+    {
+        _events.Enqueue(@event);
+        _version++;
     }
 
     public Price GetPrice(DateTimeOffset timestamp)
@@ -124,27 +132,21 @@ public class Product
     
     public void Apply(PriceRemoved @event)
     {
-        var price = _prices.FirstOrDefault(p => p.Id == @event.Id);
-        if (price is not null)
-        {
-            _prices.Remove(price);
-        }
+        var price = _prices.First(p => p.Id == @event.Id);
+        _prices.Remove(price);
         _version++;
     }
     
     public void Apply(PriceChanged @event)
     {
-        var price = _prices.FirstOrDefault(p => p.Id == @event.Id);
-        if (price is null)
-        {
-            return;
-        }
+        var price = _prices.First(p => p.Id == @event.Id);
 
         _prices.Remove(price);
         _prices.Add(new Price(
             @event.Id,
             @event.DateTimeRange,
             @event.Amount));
+        
         _version++;
     }
     

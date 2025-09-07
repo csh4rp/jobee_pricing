@@ -1,11 +1,12 @@
 using Jobee.Pricing.Application.Archiving;
-using Jobee.Pricing.Contracts.Commands;
+using Jobee.Pricing.Contracts.Archiving;
 using Jobee.Pricing.Domain;
+using Jobee.Pricing.Domain.Entities;
 using Jobee.Pricing.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 
-namespace Jobee.Pricing.UnitTests.Application.Handlers;
+namespace Jobee.Pricing.UnitTests.Application.Archiving;
 
 public class ArchiveProductCommandHandlerTests
 {

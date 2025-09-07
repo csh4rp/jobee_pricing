@@ -1,5 +1,6 @@
 using AwesomeAssertions;
 using Jobee.Pricing.Domain;
+using Jobee.Pricing.Domain.Entities;
 using Jobee.Pricing.Domain.Events;
 using Jobee.Pricing.Domain.ValueObjects;
 
@@ -10,6 +11,8 @@ public class ProductTests
     private static readonly Guid DefaultProductId = Guid.Parse("0D62AF6F-C7A2-49D8-A89E-B923C6193C58");
     private static readonly Guid DefaultPriceId = Guid.Parse("E4A77469-E31B-41E4-B0AE-2F6BF581AE25");
     private static readonly Guid FuturePriceId = Guid.Parse("A1B2C3D4-E31B-41E4-B0AE-2F6BF581AE25");
+    private const decimal DefaultPriceAmount = 100;
+    private const decimal FuturePriceAmount = 90;
     
     [Fact]
     public void ShouldGenerateEvent_WhenCreatingProduct()
@@ -217,13 +220,49 @@ public class ProductTests
         product.Prices.Should().NotContain(p => p.Id == @event.Id);
     }
     
+    [Fact]
+    public void ShouldGetPrice_WhenPriceForTimestampIsRequested()
+    {
+        // Arrange
+        var product = AnExistingProduct(isActive: true);
+        var now = DateTimeOffset.UtcNow;
+        
+        // Act
+        var currentPrice = product.GetPrice(now);
+        var futurePrice = product.GetPrice(now.AddMonths(1));
+        
+        // Assert
+        currentPrice.Id.Should().Be(DefaultPriceId);
+        currentPrice.Amount.Should().Be(DefaultPriceAmount);
+        
+        futurePrice.Id.Should().Be(FuturePriceId);
+        futurePrice.Amount.Should().Be(FuturePriceAmount);
+    }
     
+    [Fact]
+    public void ShouldThrowException_WhenPricesHaveOverlappingDateRanges()
+    {
+        // Arrange
+        var product = AnExistingProduct();
+        var prices = new List<Price>
+        {
+            new(DefaultPriceId, new DateTimeRange(), 99),
+            new(Guid.NewGuid(), new DateTimeRange(DateTimeOffset.UtcNow.Date.AddDays(-1), null), 100),
+            new(Guid.NewGuid(), new DateTimeRange(DateTimeOffset.UtcNow.Date.AddDays(-10), DateTimeOffset.UtcNow.AddDays(10)), 100)
+        };
+        
+        // Act
+        var act = () => product.Update(product.Name, product.NumberOfOffers, true, prices);
+        
+        // Assert
+        act.Should().Throw<ArgumentException>();
+    }
     
     private static Product AnExistingProduct(bool isActive = false)
     {
         var product = new Product(DefaultProductId,"Test Product", 100, isActive, [
-            new Price(DefaultPriceId, new DateTimeRange(), 100),
-            new Price(FuturePriceId, new DateTimeRange(DateTimeOffset.UtcNow.Date.AddDays(10), null), 90),
+            new Price(DefaultPriceId, new DateTimeRange(), DefaultPriceAmount),
+            new Price(FuturePriceId, new DateTimeRange(DateTimeOffset.UtcNow.Date.AddDays(10), null), FuturePriceAmount),
         ]);
 
         _ = product.DequeueEvents().ToList();

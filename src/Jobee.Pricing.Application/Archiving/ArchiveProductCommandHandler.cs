@@ -1,4 +1,4 @@
-using Jobee.Pricing.Contracts.Commands;
+using Jobee.Pricing.Contracts.Archiving;
 using Jobee.Pricing.Domain;
 using Microsoft.Extensions.Logging;
 using Wolverine.Attributes;

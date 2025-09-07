@@ -1,6 +1,5 @@
 using FluentValidation;
 using Jobee.Pricing.Application.Common;
-using Jobee.Pricing.Contracts.Commands;
 using Jobee.Pricing.Contracts.Creation;
 
 namespace Jobee.Pricing.Application.Creation;

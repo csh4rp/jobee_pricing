@@ -3,6 +3,8 @@ namespace Jobee.Pricing.Infrastructure.DataAccess.Models;
 public record ProductProjectionModel
 {
     public Guid Id { get; init; }
+    
+    public string? VersionId { get; set; }
 
     public string Name { get; set; } = null!;
     

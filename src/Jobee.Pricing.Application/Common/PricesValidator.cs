@@ -9,6 +9,9 @@ namespace Jobee.Pricing.Application.Common;
 
 public sealed class PricesValidator : AbstractValidator<IReadOnlyList<IPriceModel>>
 {
+    private const string InfiniteDateRangeError = "Only one price can have an infinite date range";
+    private const string OverlappingDateRangeError = "There can't be overlapping date ranges";
+    
     public override ValidationResult Validate(ValidationContext<IReadOnlyList<IPriceModel>> context)
     {
         var failures = new List<ValidationFailure>();
@@ -17,28 +20,43 @@ public sealed class PricesValidator : AbstractValidator<IReadOnlyList<IPriceMode
         {
             var range = new DateTimeRange(priceModel.StartsAt, priceModel.EndsAt);
             
-            if (range.IsInfinite && context.InstanceToValidate.Any(i => i != priceModel 
-                                                                        && new DateTimeRange(i.StartsAt, i.EndsAt).IsInfinite))
+            if (range.IsInfinite 
+                && context.InstanceToValidate.Any(p => p != priceModel && new DateTimeRange(p.StartsAt, p.EndsAt).IsInfinite)
+                && !failures.Any(f => f.ErrorMessage.Equals(InfiniteDateRangeError)))
             {
-                failures.Add(new ValidationFailure(nameof(priceModel.StartsAt), "Only one price can have an infinite date range")
+                var failure = new ValidationFailure(context.PropertyChain.ToString(), InfiniteDateRangeError)
                 {
-                    ErrorCode = ErrorCodes.Conflict,
+                    ErrorCode = ValidationErrorCodes.MultipleInfinitePricePeriods,
                     AttemptedValue = range.StartsAt
-                });
+                };
+                
+                failures.Add(failure);
+                context.AddFailure(failure);
             }
 
-            if (!range.IsInfinite && context.InstanceToValidate.Any(i => i != priceModel
-                                                                              && (priceModel.StartsAt.HasValue || priceModel.EndsAt.HasValue)
-                                                                              && new DateTimeRange(i.StartsAt, i.EndsAt).Overlaps(range)))
-            {
-                failures.Add(new ValidationFailure(nameof(priceModel.StartsAt), "There can't be overlapping date ranges")
+            if (!range.IsInfinite 
+                && context.InstanceToValidate.Any(p =>
                 {
-                    ErrorCode = ErrorCodes.Conflict,
+                    var rangeToCheck = new DateTimeRange(p.StartsAt, p.EndsAt);
+                    
+                    return p != priceModel
+                           && (priceModel.StartsAt.HasValue || priceModel.EndsAt.HasValue)
+                           && !rangeToCheck.IsInfinite 
+                           && rangeToCheck.Overlaps(range);
+                })
+                && !failures.Any(f => f.ErrorMessage.Equals(OverlappingDateRangeError)))
+            {
+                var failure = new ValidationFailure(context.PropertyChain.ToString(), OverlappingDateRangeError)
+                {
+                    ErrorCode = ValidationErrorCodes.OverlappingPricePeriods,
                     AttemptedValue = range.StartsAt
-                });
+                };
+                
+                failures.Add(failure);
+                context.AddFailure(failure);
             }
         }
-        
+
         return new ValidationResult(failures);
     }
 }

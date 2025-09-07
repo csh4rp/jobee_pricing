@@ -1,5 +1,5 @@
 using Jobee.Pricing.Domain;
-using Jobee.Pricing.Domain.ValueObjects;
+using Jobee.Pricing.Domain.Entities;
 using Jobee.Utils.Application.Exceptions;
 using Marten;
 using Marten.Services;
@@ -10,10 +10,7 @@ public class ProductRepository : IProductRepository
 {
     private readonly IDocumentStore _documentStore;
 
-    public ProductRepository(IDocumentStore documentStore)
-    {
-        _documentStore = documentStore;
-    }
+    public ProductRepository(IDocumentStore documentStore) => _documentStore = documentStore;
 
     public async Task AddAsync(Product product, CancellationToken cancellationToken)
     {
@@ -46,12 +43,12 @@ public class ProductRepository : IProductRepository
                       ?? throw new EntityNotFoundException(nameof(Product), id);
     }
 
-    public async Task<Product> GetByIdAsync(Guid id, DateTimeOffset timestamp, CancellationToken cancellationToken)
+    public async Task<Product> GetByIdAsync(Guid id, long version, CancellationToken cancellationToken)
     {
         await using var session = _documentStore.LightweightSession();
         return await session.Events.AggregateStreamAsync<Product>(id,
-                   timestamp: timestamp,
+                   version: version,
                    token: cancellationToken)
-               ?? throw new EntityNotFoundException(nameof(Product), $"{id}-{timestamp:O}");
+               ?? throw new EntityNotFoundException(nameof(Product), $"{id}-{version}");
     }
 }

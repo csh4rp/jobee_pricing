@@ -1,6 +1,6 @@
-using Jobee.Pricing.Contracts.Commands;
 using Jobee.Pricing.Contracts.Modification;
 using Jobee.Pricing.Domain;
+using Jobee.Pricing.Domain.Entities;
 using Jobee.Pricing.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
 
