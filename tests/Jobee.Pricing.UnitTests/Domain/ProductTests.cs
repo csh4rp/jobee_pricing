@@ -1,8 +1,8 @@
 using AwesomeAssertions;
 using Jobee.Pricing.Domain;
-using Jobee.Pricing.Domain.Entities;
+using Jobee.Pricing.Domain.Common.ValueObjects;
 using Jobee.Pricing.Domain.Events;
-using Jobee.Pricing.Domain.ValueObjects;
+using Jobee.Pricing.Domain.Products;
 
 namespace Jobee.Pricing.UnitTests.Domain;
 
@@ -12,13 +12,14 @@ public class ProductTests
     private static readonly Guid DefaultPriceId = Guid.Parse("E4A77469-E31B-41E4-B0AE-2F6BF581AE25");
     private static readonly Guid FuturePriceId = Guid.Parse("A1B2C3D4-E31B-41E4-B0AE-2F6BF581AE25");
     private const decimal DefaultPriceAmount = 100;
-    private const decimal FuturePriceAmount = 90;
+    private static readonly Money DefaultPrice = new(100, Currency.EUR);
+    private static readonly Money FuturePrice = new(90, Currency.EUR);
     
     [Fact]
     public void ShouldGenerateEvent_WhenCreatingProduct()
     {
         var product = new Product(Guid.NewGuid(), "Test Product", 100, true, [
-            new Price(Guid.NewGuid(), new DateTimeRange(), 100)
+            new Price(Guid.NewGuid(), new DateTimeRange(), DefaultPrice)
         ]);
 
         var events = product.DequeueEvents().ToList();
@@ -30,7 +31,7 @@ public class ProductTests
         @event.IsActive.Should().Be(product.IsActive);
         @event.NumberOfOffers.Should().Be(product.NumberOfOffers);
         @event.Prices.Should().HaveCount(1);
-        @event.Prices[0].Amount.Should().Be(100);
+        @event.Prices[0].Money.Amount.Should().Be(100);
         @event.Prices[0].DateTimeRange.StartsAt.Should().BeNull();
         @event.Prices[0].DateTimeRange.EndsAt.Should().BeNull();
     }
@@ -45,8 +46,8 @@ public class ProductTests
         var newPriceId = Guid.NewGuid();
         var prices = new List<Price>
         {
-            new(DefaultPriceId, new DateTimeRange(), 99),
-            new(newPriceId, new DateTimeRange(DateTimeOffset.UtcNow.Date.AddDays(-1), null), 100)
+            new(DefaultPriceId, new DateTimeRange(), new Money(99, Currency.EUR)),
+            new(newPriceId, new DateTimeRange(DateTimeOffset.UtcNow.Date.AddDays(-1), null), DefaultPrice)
         };
         
         // Act
@@ -71,19 +72,19 @@ public class ProductTests
         var priceCreatedEvent = (PriceCreated?)events.FirstOrDefault(e => e is PriceCreated);
         priceCreatedEvent.Should().NotBeNull();
         priceCreatedEvent.Id.Should().Be(newPriceId);
-        priceCreatedEvent.Amount.Should().Be(100);
+        priceCreatedEvent.Money.Amount.Should().Be(100);
         priceCreatedEvent.DateTimeRange.Should().Be(new DateTimeRange(DateTimeOffset.UtcNow.Date.AddDays(-1), null));
 
         var priceChangedEvent = (PriceChanged?)events.FirstOrDefault(e => e is PriceChanged);
         priceChangedEvent.Should().NotBeNull();
         priceChangedEvent.Id.Should().Be(DefaultPriceId);
-        priceChangedEvent.Amount.Should().Be(99);
+        priceChangedEvent.Money.Amount.Should().Be(99);
         priceChangedEvent.DateTimeRange.Should().Be(new DateTimeRange());
         
         var priceRemovedEvent = (PriceRemoved?)events.FirstOrDefault(e => e is PriceRemoved);
         priceRemovedEvent.Should().NotBeNull();
         priceRemovedEvent.Id.Should().Be(FuturePriceId);
-        priceRemovedEvent.Amount.Should().Be(90);
+        priceRemovedEvent.Money.Amount.Should().Be(90);
         priceRemovedEvent.DateTimeRange.Should().Be(new DateTimeRange(DateTimeOffset.UtcNow.Date.AddDays(10), null));
     }
     
@@ -112,7 +113,7 @@ public class ProductTests
             100,
             true,
             [
-                new Price(Guid.NewGuid(), new DateTimeRange(), 100)
+                new Price(Guid.NewGuid(), new DateTimeRange(), DefaultPrice)
             ]);
         
         var product = new Product(@event);
@@ -123,7 +124,7 @@ public class ProductTests
         product.IsActive.Should().Be(@event.IsActive);
         product.Prices.Should().HaveCount(1);
         product.Prices[0].Id.Should().Be(@event.Prices[0].Id);
-        product.Prices[0].Amount.Should().Be(@event.Prices[0].Amount);
+        product.Prices[0].Money.Amount.Should().Be(@event.Prices[0].Money.Amount);
         product.Prices[0].DateTimeRange.Should().Be(@event.Prices[0].DateTimeRange);
     }
     
@@ -179,7 +180,7 @@ public class ProductTests
         // Arrange
         var product = AnExistingProduct();
 
-        var @event = new PriceCreated(Guid.NewGuid(), new DateTimeRange(DateTimeOffset.UtcNow.AddDays(100), null), 100);
+        var @event = new PriceCreated(Guid.NewGuid(), new DateTimeRange(DateTimeOffset.UtcNow.AddDays(100), null), new Money(100, Currency.EUR));
         
         // Act
         product.Apply(@event);
@@ -194,14 +195,14 @@ public class ProductTests
         // Arrange
         var product = AnExistingProduct();
 
-        var @event = new PriceChanged(FuturePriceId, new DateTimeRange(DateTimeOffset.UtcNow.AddDays(100), null), 100);
+        var @event = new PriceChanged(FuturePriceId, new DateTimeRange(DateTimeOffset.UtcNow.AddDays(100), null), new Money(100, Currency.EUR));
         
         // Act
         product.Apply(@event);
 
         // Assert
         product.Prices.Should().Contain(p => p.Id == @event.Id
-            && p.Amount == @event.Amount
+            && p.Money.Amount == @event.Money.Amount
             && p.DateTimeRange == @event.DateTimeRange);
     }
     
@@ -211,7 +212,7 @@ public class ProductTests
         // Arrange
         var product = AnExistingProduct();
 
-        var @event = new PriceRemoved(FuturePriceId, new DateTimeRange(DateTimeOffset.UtcNow.AddDays(100), null), 100);
+        var @event = new PriceRemoved(FuturePriceId, new DateTimeRange(DateTimeOffset.UtcNow.AddDays(100), null), new Money(100, Currency.EUR));
         
         // Act
         product.Apply(@event);
@@ -233,10 +234,10 @@ public class ProductTests
         
         // Assert
         currentPrice.Id.Should().Be(DefaultPriceId);
-        currentPrice.Amount.Should().Be(DefaultPriceAmount);
+        currentPrice.Money.Amount.Should().Be(DefaultPriceAmount);
         
         futurePrice.Id.Should().Be(FuturePriceId);
-        futurePrice.Amount.Should().Be(FuturePriceAmount);
+        futurePrice.Money.Should().Be(FuturePrice);
     }
     
     [Fact]
@@ -246,9 +247,9 @@ public class ProductTests
         var product = AnExistingProduct();
         var prices = new List<Price>
         {
-            new(DefaultPriceId, new DateTimeRange(), 99),
-            new(Guid.NewGuid(), new DateTimeRange(DateTimeOffset.UtcNow.Date.AddDays(-1), null), 100),
-            new(Guid.NewGuid(), new DateTimeRange(DateTimeOffset.UtcNow.Date.AddDays(-10), DateTimeOffset.UtcNow.AddDays(10)), 100)
+            new(DefaultPriceId, new DateTimeRange(), new Money(99, Currency.EUR)),
+            new(Guid.NewGuid(), new DateTimeRange(DateTimeOffset.UtcNow.Date.AddDays(-1), null), new Money(100, Currency.EUR)),
+            new(Guid.NewGuid(), new DateTimeRange(DateTimeOffset.UtcNow.Date.AddDays(-10), DateTimeOffset.UtcNow.AddDays(10)), new Money(100, Currency.EUR))
         };
         
         // Act
@@ -261,8 +262,8 @@ public class ProductTests
     private static Product AnExistingProduct(bool isActive = false)
     {
         var product = new Product(DefaultProductId,"Test Product", 100, isActive, [
-            new Price(DefaultPriceId, new DateTimeRange(), DefaultPriceAmount),
-            new Price(FuturePriceId, new DateTimeRange(DateTimeOffset.UtcNow.Date.AddDays(10), null), FuturePriceAmount),
+            new Price(DefaultPriceId, new DateTimeRange(), DefaultPrice),
+            new Price(FuturePriceId, new DateTimeRange(DateTimeOffset.UtcNow.Date.AddDays(10), null), FuturePrice),
         ]);
 
         _ = product.DequeueEvents().ToList();

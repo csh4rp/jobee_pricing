@@ -1,1 +1,8 @@
-﻿<Project Sdk="Microsoft.NET.Sdk" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <Folder Include="Products\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Jobee.Pricing.Domain\Jobee.Pricing.Domain.csproj" />
+  </ItemGroup>
+</Project>

@@ -6,4 +6,7 @@
   <ItemGroup>
     <PackageReference Include="NSubstitute" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Application\Products\" />
+  </ItemGroup>
 </Project>

@@ -1,9 +1,9 @@
-using Jobee.Pricing.Contracts.Archiving;
-using Jobee.Pricing.Contracts.Creation;
-using Jobee.Pricing.Contracts.Models;
-using Jobee.Pricing.Contracts.Modification;
-using Jobee.Pricing.Contracts.PriceCalculation;
-using Jobee.Pricing.Contracts.Queries;
+using Jobee.Pricing.Contracts.Products.Archiving;
+using Jobee.Pricing.Contracts.Products.Creation;
+using Jobee.Pricing.Contracts.Products.Models;
+using Jobee.Pricing.Contracts.Products.Modification;
+using Jobee.Pricing.Contracts.Products.PriceCalculation;
+using Jobee.Pricing.Contracts.Products.Queries;
 using Jobee.Utils.Api.ApiResults;
 using Jobee.Utils.Api.Responses;
 using Jobee.Utils.Api.Validation;

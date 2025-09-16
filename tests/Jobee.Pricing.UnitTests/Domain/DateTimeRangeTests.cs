@@ -1,5 +1,5 @@
 using AwesomeAssertions;
-using Jobee.Pricing.Domain.ValueObjects;
+using Jobee.Pricing.Domain.Common.ValueObjects;
 
 namespace Jobee.Pricing.UnitTests.Domain;
 

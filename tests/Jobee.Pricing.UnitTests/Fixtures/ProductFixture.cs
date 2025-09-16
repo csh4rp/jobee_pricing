@@ -1,12 +1,12 @@
-using Jobee.Pricing.Domain.Entities;
-using Jobee.Pricing.Domain.ValueObjects;
+using Jobee.Pricing.Domain.Common.ValueObjects;
+using Jobee.Pricing.Domain.Products;
 
 namespace Jobee.Pricing.UnitTests.Fixtures;
 
 public class ProductFixture
 {
-    public readonly decimal DefaultPrice = 100;
-    public readonly decimal CurrentPrice = 105;
+    public readonly Money DefaultPrice = new(100, Currency.PLN);
+    public readonly Money CurrentPrice = new(105, Currency.PLN);
 
     public Product AProduct()
     {
@@ -24,11 +24,11 @@ public class ProductFixture
                 new Price(Guid.CreateVersion7(), 
                     new DateTimeRange(new DateTimeOffset(2027, 1, 1, 0, 0, 0, TimeSpan.Zero),
                         new DateTimeOffset(2028, 12, 31, 23, 59, 59, TimeSpan.Zero)
-                    ), 110),
+                    ), new Money(110, Currency.EUR)),
                 new Price(Guid.CreateVersion7(), 
                     new DateTimeRange(new DateTimeOffset(2029, 1, 1, 0, 0, 0, TimeSpan.Zero),
                         null
-                    ), 120)
+                    ), new  Money(120, Currency.EUR))
             ]);
         
         _  = product.DequeueEvents().ToList();

@@ -8,4 +8,7 @@
       <PackageReference Include="WolverineFx" />
       <PackageReference Include="Jobee.Utils.Api" />
     </ItemGroup>
+    <ItemGroup>
+      <Folder Include="Products\" />
+    </ItemGroup>
 </Project>
