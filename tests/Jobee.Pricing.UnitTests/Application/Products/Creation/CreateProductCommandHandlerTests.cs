@@ -1,5 +1,6 @@
 using AwesomeAssertions;
 using Jobee.Pricing.Application.Products.Creation;
+using Jobee.Pricing.Contracts.Products.Common;
 using Jobee.Pricing.Contracts.Products.Creation;
 using Jobee.Pricing.Domain.Products;
 using Jobee.Pricing.Domain.Settings;
@@ -26,8 +27,18 @@ public class CreateProductCommandHandlerTests
         var command = new CreateProductCommand
         {
             Name = "Test Product",
-            NumberOfOffers = 1,
+            Description = "Description",
             IsActive = true,
+            Attributes = new AttributesModel
+            {
+                NumberOfBumps = 1,
+                NumberOfLocations = 1,
+                DurationInDays = 30
+            },
+            FeatureFlags = new FeatureFlagsModel
+            {
+                HasPriority = false
+            },
             Prices = new List<CreatePriceModel>
             {
                 new()
@@ -46,6 +57,10 @@ public class CreateProductCommandHandlerTests
         await _productRepository.Received(1).AddAsync(Arg.Is<Product>(p => 
             p.IsActive == command.IsActive
             && p.Name == command.Name
-            && p.NumberOfOffers == command.NumberOfOffers), Arg.Any<CancellationToken>());
+            && p.Description == command.Description
+            && p.Attributes.Duration == TimeSpan.FromDays(command.Attributes.DurationInDays)
+            && p.Attributes.NumberOfBumps == command.Attributes.NumberOfBumps
+            && p.Attributes.NumberOfLocations == command.Attributes.NumberOfLocations
+            && p.FeatureFlags.HasPriority == command.FeatureFlags.HasPriority), Arg.Any<CancellationToken>());
     }
 }

@@ -1,75 +1,94 @@
+using Jobee.Pricing.Domain.Common;
 using Jobee.Pricing.Domain.Events;
 
 namespace Jobee.Pricing.Domain.Products;
 
-public class Product
+public class Product : Entity<Guid>
 {
-    private readonly Queue<object> _events = [];
     private readonly List<Price> _prices;
-    private int _version;
-
-    public Guid Id { get; private init; }
     
     public bool IsActive { get; private set; }
 
     public string Name { get; private set; }
     
-    public int NumberOfOffers { get; private set; }
+    public string Description { get; private set; }
+    
+    public FeatureFlags FeatureFlags { get; private set; }
+    
+    public Attributes Attributes { get; private set; }
     
     public IReadOnlyList<Price> Prices => _prices;
     
     public Product(ProductCreated @event)
     {
-        Id = @event.Id;
+        Id = @event.ProductId;
         IsActive = @event.IsActive;
         Name = @event.Name;
-        NumberOfOffers = @event.NumberOfOffers;
+        Description = @event.Description;
+        FeatureFlags = @event.FeatureFlags;
+        Attributes = @event.Attributes;
         _prices = [.. @event.Prices.Select(p => new Price(p.Id, p.DateTimeRange, p.Money))];
     }
     
-    public Product(Guid id, string name, int numberOfOffers, bool isActive, IReadOnlyList<Price> prices)
+    public Product(string name, string description, bool isActive,
+        FeatureFlags featureFlags, Attributes attributes,
+        IReadOnlyList<Price> prices)
     {
-        ValidatePrices(prices);
+        PriceValidator.ValidatePrices(prices);
         
-        Id = id;
+        Id = Guid.CreateVersion7();
         IsActive = isActive;
         Name = name;
-        NumberOfOffers = numberOfOffers;
+        Description = description;
+        FeatureFlags = featureFlags;
+        Attributes = attributes;
         _prices = prices as List<Price> ?? [.. prices];
-        _events.Enqueue(new ProductCreated(id, name, numberOfOffers, isActive, prices));
-    }
-
-    private static void ValidatePrices(IReadOnlyCollection<Price> prices)
-    {
-        if (prices.Count(p => p.IsDefault) != 1)
+        EnqueueEvent(new ProductCreated
         {
-            throw new ArgumentException("Only one default price is allowed.");
-        }
-        
-        foreach (var price in prices)
-        {
-            if (prices.Any(p => p.Id != price.Id && !p.IsDefault && !price.IsDefault && p.DateTimeRange.Overlaps(price.DateTimeRange)))
-            {
-                throw new ArgumentException($"Price with ID {price.Id} overlaps with another price in the collection.");
-            }
-        }
+            ProductId = Id,
+            Name = Name,
+            Description = Description,
+            IsActive = IsActive,
+            FeatureFlags = FeatureFlags,
+            Attributes = Attributes,
+            Prices = [.. Prices]
+        });
     }
-
-    public void Update(string name, int numberOfOffers, bool isActive, IReadOnlyCollection<Price> prices)
+    
+    public void Update(string name, string description, bool isActive,
+        FeatureFlags featureFlags, Attributes attributes,
+        IReadOnlyCollection<Price> prices)
     {
-        ValidatePrices(prices);
+        PriceValidator.ValidatePrices(prices);
         
-        if (name != Name || numberOfOffers != NumberOfOffers)
+        if (name != Name)
         {
             Name = name;
-            NumberOfOffers = numberOfOffers;
-            EnqueueEvent(new ProductChanged(name, numberOfOffers));
+            EnqueueEvent(new ProductNameChanged(name));
+        }
+
+        if (description != Description)
+        {
+            Description = description;
+            EnqueueEvent(new ProductDescriptionChanged(description));
         }
 
         if (isActive != IsActive)
         {
             IsActive = isActive;
             EnqueueEvent(isActive ? new ProductActivated() : new ProductDeactivated());
+        }
+        
+        if (featureFlags != FeatureFlags)
+        {
+            FeatureFlags = featureFlags;
+            EnqueueEvent(new ProductFeatureFlagsChanged(featureFlags));
+        }
+        
+        if (attributes != Attributes)
+        {
+            Attributes = attributes;
+            EnqueueEvent(new ProductAttributesChanged(attributes));
         }
 
         foreach (var price in prices)
@@ -94,13 +113,6 @@ public class Product
             }
         }
     }
-    
-    private void EnqueueEvent(object @event)
-    {
-        _events.Enqueue(@event);
-        _version++;
-    }
-
     public Price GetPrice(DateTimeOffset timestamp)
     {
         var price = _prices.Where(p => 
@@ -111,11 +123,32 @@ public class Product
         return price;
     }
 
-    public void Apply(ProductChanged @event)
+    public void Apply(ProductNameChanged @event)
     {
         Name = @event.Name;
-        NumberOfOffers = @event.NumberOfOffers;
-        _version++;
+    }
+    
+    public void Apply(ProductDescriptionChanged @event)
+    {
+        Description = @event.Description;
+    }
+    
+    public void Apply(ProductFeatureFlagsChanged @event)
+    {
+        FeatureFlags = new FeatureFlags
+        {
+            HasPriority = @event.HasPriority
+        };
+    }
+    
+    public void Apply(ProductAttributesChanged @event)
+    {
+        Attributes = new Attributes
+        {
+            Duration = @event.Duration,
+            NumberOfBumps = @event.NumberOfBumps,
+            NumberOfLocations = @event.NumberOfLocations
+        };
     }
     
     public void Apply(PriceCreated @event)
@@ -124,14 +157,12 @@ public class Product
             @event.Id,
             @event.DateTimeRange,
             @event.Money));
-        _version++;
     }
     
     public void Apply(PriceRemoved @event)
     {
         var price = _prices.First(p => p.Id == @event.Id);
         _prices.Remove(price);
-        _version++;
     }
     
     public void Apply(PriceChanged @event)
@@ -143,27 +174,15 @@ public class Product
             @event.Id,
             @event.DateTimeRange,
             @event.Money));
-        
-        _version++;
     }
     
     public void Apply(ProductActivated _)
     {
         IsActive = true;
-        _version++;
     }
     
     public void Apply(ProductDeactivated _)
     {
         IsActive = false;
-        _version++;
-    }
-    
-    public IEnumerable<object> DequeueEvents()
-    {
-        while (_events.Count > 0)
-        {
-            yield return _events.Dequeue();
-        }
     }
 }

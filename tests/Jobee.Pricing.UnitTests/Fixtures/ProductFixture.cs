@@ -1,3 +1,4 @@
+using Jobee.Pricing.Domain.Common;
 using Jobee.Pricing.Domain.Common.ValueObjects;
 using Jobee.Pricing.Domain.Products;
 
@@ -11,10 +12,19 @@ public class ProductFixture
     public Product AProduct()
     {
         var product = new Product(
-            Guid.NewGuid(),
             "Test Product",
-            1,
+            "Description",
             true,
+            new FeatureFlags
+            {
+              HasPriority  = true
+            },
+            new Attributes
+            {
+                Duration = TimeSpan.FromHours(30),
+                NumberOfBumps = 1,
+                NumberOfLocations = 5
+            },
             [
                 new Price(Guid.CreateVersion7(), new DateTimeRange(), DefaultPrice),
                 new Price(Guid.CreateVersion7(), 

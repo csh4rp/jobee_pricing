@@ -1,8 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
-    <Folder Include="Common\" />
-  </ItemGroup>
-  <ItemGroup>
     <Reference Include="Jobee.Utils.Application">
       <HintPath>..\..\..\..\..\.nuget\packages\jobee.utils.application\1.0.0\lib\net9.0\Jobee.Utils.Application.dll</HintPath>
     </Reference>

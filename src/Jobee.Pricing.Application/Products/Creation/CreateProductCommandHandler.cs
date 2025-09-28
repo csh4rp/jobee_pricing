@@ -1,5 +1,6 @@
 using Jobee.Pricing.Contracts.Products.Creation;
 using Jobee.Pricing.Domain;
+using Jobee.Pricing.Domain.Common;
 using Jobee.Pricing.Domain.Common.ValueObjects;
 using Jobee.Pricing.Domain.Products;
 using Jobee.Pricing.Domain.Settings;
@@ -19,21 +20,29 @@ public class CreateProductCommandHandler
         var defaultCurrency = await settingsService.GetDefaultCurrencyAsync(cancellationToken);
 
         var prices = request.Prices.Select(price => 
-            new Price(Guid.CreateVersion7(),
-            new DateTimeRange(price.StartsAt, price.EndsAt), 
+            new Price(new DateTimeRange(price.StartsAt, price.EndsAt), 
             new Money(price.Amount, defaultCurrency))
         ).ToList();
         
         var product = new Product(
-            Guid.CreateVersion7(),
             request.Name,
-            request.NumberOfOffers,
+            request.Description,
             request.IsActive,
+            new FeatureFlags
+            {
+                HasPriority = request.FeatureFlags.HasPriority,
+            },
+            new Attributes
+            {
+                Duration = TimeSpan.FromDays(request.Attributes.DurationInDays),
+                NumberOfBumps = request.Attributes.NumberOfBumps,
+                NumberOfLocations = request.Attributes.NumberOfLocations,
+            },
             prices);
 
         await productRepository.AddAsync(product, cancellationToken);
         
-        logger.LogInformation("Product with id: {Id} and name: {Name} created", product.Id, product.Name);
+        logger.LogInformation("Product with id: {id} and name: {name} created", product.Id, product.Name);
 
         return new CreatedResponse<Guid>
         {

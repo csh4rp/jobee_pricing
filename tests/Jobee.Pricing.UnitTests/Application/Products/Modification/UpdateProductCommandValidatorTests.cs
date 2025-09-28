@@ -1,10 +1,12 @@
 using AwesomeAssertions;
 using Jobee.Pricing.Application.Common;
-using Jobee.Pricing.Application.Modification;
+using Jobee.Pricing.Application.Products.Common;
+using Jobee.Pricing.Application.Products.Modification;
+using Jobee.Pricing.Contracts.Products.Common;
 using Jobee.Pricing.Contracts.Products.Creation;
 using Jobee.Pricing.Contracts.Products.Modification;
 
-namespace Jobee.Pricing.UnitTests.Application.Modification;
+namespace Jobee.Pricing.UnitTests.Application.Products.Modification;
 
 public class UpdateProductCommandValidatorTests
 {
@@ -17,7 +19,17 @@ public class UpdateProductCommandValidatorTests
         {
             IsActive = true,
             Name = "Valid Product",
-            NumberOfOffers = 10,
+            Description = "A valid product description",
+            Attributes = new AttributesModel
+            {
+                NumberOfBumps = 1,
+                NumberOfLocations = 1,
+                DurationInDays = 30
+            },
+            FeatureFlags = new FeatureFlagsModel
+            {
+                HasPriority = true
+            },
             Prices = new List<UpdatePriceModel>
             {
                 new()
@@ -50,7 +62,17 @@ public class UpdateProductCommandValidatorTests
         {
             IsActive = true,
             Name = "",
-            NumberOfOffers = -1,
+            Description = "",
+            Attributes = new AttributesModel
+            {
+                NumberOfBumps = -1,
+                NumberOfLocations = 0,
+                DurationInDays = 0
+            },
+            FeatureFlags = new FeatureFlagsModel
+            {
+                HasPriority = true
+            },
             Prices = new List<UpdatePriceModel>
             {
                 new()
@@ -91,9 +113,6 @@ public class UpdateProductCommandValidatorTests
         validationResult.Errors.Should().HaveCount(5);
         validationResult.Errors.Should().Contain(e => e.ErrorCode == "NotEmptyValidator"
                                                       && e.PropertyName == nameof(CreateProductCommand.Name));
-
-        validationResult.Errors.Should().Contain(e => e.ErrorCode == "GreaterThanValidator"
-                                                      && e.PropertyName == nameof(CreateProductCommand.NumberOfOffers));
 
         validationResult.Errors.Should().Contain(e => e.ErrorCode == "GreaterThanOrEqualValidator"
                                                       && e.PropertyName == "Prices[0].Amount");

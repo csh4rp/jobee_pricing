@@ -1,8 +1,6 @@
 using JasperFx.Events.Projections;
-using Jobee.Pricing.Domain;
 using Jobee.Pricing.Domain.Products;
 using Jobee.Pricing.Domain.Settings;
-using Jobee.Pricing.Infrastructure.DataAccess;
 using Jobee.Pricing.Infrastructure.Products;
 using Jobee.Pricing.Infrastructure.Settings;
 using Marten;

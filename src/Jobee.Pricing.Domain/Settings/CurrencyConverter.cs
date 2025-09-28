@@ -1,3 +1,4 @@
+using Jobee.Pricing.Domain.Common;
 using Jobee.Pricing.Domain.Common.ValueObjects;
 using Jobee.Utils.Application.Exceptions;
 

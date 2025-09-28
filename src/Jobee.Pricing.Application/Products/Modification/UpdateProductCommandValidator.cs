@@ -1,8 +1,9 @@
 using FluentValidation;
 using Jobee.Pricing.Application.Common;
+using Jobee.Pricing.Application.Products.Common;
 using Jobee.Pricing.Contracts.Products.Modification;
 
-namespace Jobee.Pricing.Application.Modification;
+namespace Jobee.Pricing.Application.Products.Modification;
 
 public sealed class UpdateProductCommandValidator : AbstractValidator<UpdateProductCommand>
 {
@@ -12,8 +13,8 @@ public sealed class UpdateProductCommandValidator : AbstractValidator<UpdateProd
             .NotEmpty()
             .MaximumLength(255);
 
-        RuleFor(x => x.NumberOfOffers)
-            .GreaterThan(0);
+        RuleFor(x => x.Attributes)
+            .SetValidator(new AttributesValidator());
 
         RuleFor(x => x.Prices)
             .NotEmpty()

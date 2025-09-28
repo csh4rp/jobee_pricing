@@ -1,6 +1,4 @@
-using Jobee.Pricing.Domain.Common.ValueObjects;
-
-namespace Jobee.Pricing.Domain.Products;
+namespace Jobee.Pricing.Domain.Common;
 
 public record Price
 {
@@ -17,5 +15,10 @@ public record Price
         Id = id;
         DateTimeRange = dateTimeRange;
         Money = money;
+        
+    }
+    
+    public Price(DateTimeRange dateTimeRange, Money money) : this(Guid.CreateVersion7(), dateTimeRange, money)
+    {
     }
 }

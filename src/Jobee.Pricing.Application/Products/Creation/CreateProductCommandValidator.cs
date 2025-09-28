@@ -1,8 +1,9 @@
 using FluentValidation;
 using Jobee.Pricing.Application.Common;
+using Jobee.Pricing.Application.Products.Common;
 using Jobee.Pricing.Contracts.Products.Creation;
 
-namespace Jobee.Pricing.Application.Creation;
+namespace Jobee.Pricing.Application.Products.Creation;
 
 public sealed class CreateProductCommandValidator : AbstractValidator<CreateProductCommand>
 {
@@ -12,9 +13,10 @@ public sealed class CreateProductCommandValidator : AbstractValidator<CreateProd
             .NotEmpty()
             .MaximumLength(255);
 
-        RuleFor(x => x.NumberOfOffers)
-            .GreaterThan(0);
-
+        RuleFor(x => x.Attributes)
+            .NotNull()
+            .SetValidator(new AttributesValidator());
+            
         RuleFor(x => x.Prices)
             .NotEmpty()
             .SetValidator(new PricesValidator())

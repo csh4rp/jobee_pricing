@@ -5,9 +5,6 @@ public record ProductProjectionModel
     public Guid Id { get; init; }
 
     public string Name { get; set; } = null!;
-    
-    public int NumberOfOffers { get; set; }
-    
     public bool IsActive { get; set; }
     
     public DateTimeOffset CreatedAt { get; init; }

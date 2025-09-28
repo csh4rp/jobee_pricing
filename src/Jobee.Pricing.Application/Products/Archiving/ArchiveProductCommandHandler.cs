@@ -16,6 +16,6 @@ public class ArchiveProductCommandHandler
         var product = await productRepository.GetByIdAsync(request.Id, cancellationToken);
         await productRepository.ArchiveAsync(product, cancellationToken);
         
-        logger.LogInformation("Product with id: {Id} and name: {Name} archived", product.Id, product.Name);
+        logger.LogInformation("Product with id: {id} and name: {name} archived", product.Id, product.Name);
     }
 }

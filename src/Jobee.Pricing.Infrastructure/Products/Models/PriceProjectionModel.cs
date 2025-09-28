@@ -1,3 +1,4 @@
+using Jobee.Pricing.Domain.Common;
 using Jobee.Pricing.Domain.Common.ValueObjects;
 
 namespace Jobee.Pricing.Infrastructure.Products.Models;

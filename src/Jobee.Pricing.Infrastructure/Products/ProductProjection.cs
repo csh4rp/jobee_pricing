@@ -1,4 +1,5 @@
 using JasperFx.Events;
+using Jobee.Pricing.Domain.Common;
 using Jobee.Pricing.Domain.Events;
 using Jobee.Pricing.Domain.Products;
 using Jobee.Pricing.Infrastructure.Products.Models;
@@ -13,10 +14,9 @@ public class ProductProjection : SingleStreamProjection<ProductProjectionModel, 
         Name = "Product";
     }
     
-    public void Apply(IEvent<ProductChanged> @event, ProductProjectionModel model)
+    public void Apply(IEvent<ProductNameChanged> @event, ProductProjectionModel model)
     {
         model.Name = @event.Data.Name;
-        model.NumberOfOffers = @event.Data.NumberOfOffers;
         model.LastModifiedAt = @event.Timestamp;
     }
     
@@ -68,9 +68,8 @@ public class ProductProjection : SingleStreamProjection<ProductProjectionModel, 
     {
         return new ProductProjectionModel
         {
-            Id = @event.Data.Id,
+            Id = @event.Id,
             Name = @event.Data.Name,
-            NumberOfOffers = @event.Data.NumberOfOffers,
             IsActive = @event.Data.IsActive,
             CreatedAt = @event.Timestamp,
             LastModifiedAt = null,

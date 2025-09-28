@@ -1,4 +1,5 @@
 using Jobee.Pricing.Contracts.Products.Modification;
+using Jobee.Pricing.Domain.Common;
 using Jobee.Pricing.Domain.Common.ValueObjects;
 using Jobee.Pricing.Domain.Products;
 using Jobee.Pricing.Domain.Settings;
@@ -25,12 +26,22 @@ public class UpdateProductCommandHandler
         
         product.Update(
             request.Name,
-            request.NumberOfOffers,
+            request.Description,
             request.IsActive,
+            new FeatureFlags
+            {
+                HasPriority = request.FeatureFlags.HasPriority,
+            },
+            new Attributes
+            {
+                Duration = TimeSpan.FromDays(request.Attributes.DurationInDays),
+                NumberOfBumps = request.Attributes.NumberOfBumps,
+                NumberOfLocations = request.Attributes.NumberOfLocations,
+            },
             prices);
 
         await productRepository.UpdateAsync(product, cancellationToken);
         
-        logger.LogInformation("Product with id: {Id} and name: {Name} updated", product.Id, product.Name);
+        logger.LogInformation("Product with id: {id} and name: {name} updated", product.Id, product.Name);
     }
 }

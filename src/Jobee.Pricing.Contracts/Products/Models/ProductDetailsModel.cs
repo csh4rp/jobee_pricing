@@ -6,7 +6,5 @@ public record ProductDetailsModel
     
     public required string Name { get; init; }
     
-    public required int NumberOfOffers { get; init; }
-    
     public required IReadOnlyList<PriceModel> Prices { get; init; }
 }

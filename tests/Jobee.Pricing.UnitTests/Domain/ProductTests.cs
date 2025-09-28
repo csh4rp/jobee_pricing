@@ -1,5 +1,6 @@
 using AwesomeAssertions;
 using Jobee.Pricing.Domain;
+using Jobee.Pricing.Domain.Common;
 using Jobee.Pricing.Domain.Common.ValueObjects;
 using Jobee.Pricing.Domain.Events;
 using Jobee.Pricing.Domain.Products;
@@ -18,7 +19,18 @@ public class ProductTests
     [Fact]
     public void ShouldGenerateEvent_WhenCreatingProduct()
     {
-        var product = new Product(Guid.NewGuid(), "Test Product", 100, true, [
+        var product = new Product( "Test Product", "Description", true,
+        new FeatureFlags
+        {
+            HasPriority = false
+        },
+        new Attributes
+        {
+          NumberOfBumps  = 1,
+          NumberOfLocations = 1,
+          Duration = TimeSpan.FromDays(30)
+        },
+        [
             new Price(Guid.NewGuid(), new DateTimeRange(), DefaultPrice)
         ]);
 
@@ -29,7 +41,6 @@ public class ProductTests
         var @event = (ProductCreated)events[0];
         @event.Name.Should().Be(product.Name);
         @event.IsActive.Should().Be(product.IsActive);
-        @event.NumberOfOffers.Should().Be(product.NumberOfOffers);
         @event.Prices.Should().HaveCount(1);
         @event.Prices[0].Money.Amount.Should().Be(100);
         @event.Prices[0].DateTimeRange.StartsAt.Should().BeNull();
@@ -42,7 +53,17 @@ public class ProductTests
         // Arrange
         var product = AnExistingProduct();
         const string newName = "New Name";
-        const int newNumberOfOffers = 99999;
+        const string newDescription = "New Desc";
+        var newFeatureFlags = new FeatureFlags
+        {
+            HasPriority = true
+        };
+        var newAttributes = new Attributes
+        {
+            NumberOfBumps = 10,
+            NumberOfLocations = 10,
+            Duration = TimeSpan.FromDays(90)
+        };
         var newPriceId = Guid.NewGuid();
         var prices = new List<Price>
         {
@@ -51,20 +72,22 @@ public class ProductTests
         };
         
         // Act
-        product.Update(newName, newNumberOfOffers, true, prices);
+        product.Update(newName, newDescription, true, newFeatureFlags, newAttributes, prices);
         
         var events = product.DequeueEvents().ToList();
         
         // Assert
         product.Name.Should().Be(newName);
-        product.NumberOfOffers.Should().Be(newNumberOfOffers);
         product.IsActive.Should().BeTrue();
         events.Should().HaveCount(5);
 
-        var productChangedEvent = (ProductChanged?)events.FirstOrDefault(e => e is ProductChanged);
-        productChangedEvent.Should().NotBeNull();
-        productChangedEvent.Name.Should().Be(newName);
-        productChangedEvent.NumberOfOffers.Should().Be(newNumberOfOffers);
+        var productNameChangedEvent = (ProductNameChanged?)events.FirstOrDefault(e => e is ProductNameChanged);
+        productNameChangedEvent.Should().NotBeNull();
+        productNameChangedEvent.Name.Should().Be(newName);
+        
+        var productDescriptionChangedEvent = (ProductDescriptionChanged?)events.FirstOrDefault(e => e is ProductNameChanged);
+        productDescriptionChangedEvent.Should().NotBeNull();
+        productDescriptionChangedEvent.Description.Should().Be(newDescription);
         
         var productActivatedEvent = (ProductActivated?)events.FirstOrDefault(e => e is ProductActivated);
         productActivatedEvent.Should().NotBeNull();
@@ -95,32 +118,44 @@ public class ProductTests
         var product = AnExistingProduct(isActive: true);
         
         // Act
-        product.Update(product.Name, product.NumberOfOffers, false, product.Prices);
+        product.Update(product.Name, product.Description, false, product.FeatureFlags, product.Attributes, product.Prices);
         
         var events = product.DequeueEvents().ToList();
 
         events.Should().ContainSingle();
         events[0].Should().BeOfType<ProductDeactivated>();
         var @event = (ProductDeactivated)events[0];
+        @events.Should().NotBeNull();
     }
     
     [Fact]
     public void ShouldCreateProduct_WhenProductCreateEventIsApplied()
     {
-        var @event = new ProductCreated(
-            DefaultProductId,
-            "Test Product",
-            100,
-            true,
-            [
+        var @event = new ProductCreated
+        {
+            ProductId = DefaultProductId,
+            Name = "Test Product",
+            Description = "Description",
+            IsActive = true,
+            FeatureFlags = new FeatureFlags
+            {
+                HasPriority = true
+            },
+            Attributes = new Attributes
+            {
+                NumberOfBumps = 1,
+                NumberOfLocations = 1,
+                Duration = TimeSpan.FromDays(30)
+            },
+            Prices = [
                 new Price(Guid.NewGuid(), new DateTimeRange(), DefaultPrice)
-            ]);
+            ]
+        };
         
         var product = new Product(@event);
         
-        product.Id.Should().Be(@event.Id);
+        product.Id.Should().Be(@event.ProductId);
         product.Name.Should().Be(@event.Name);
-        product.NumberOfOffers.Should().Be(@event.NumberOfOffers);
         product.IsActive.Should().Be(@event.IsActive);
         product.Prices.Should().HaveCount(1);
         product.Prices[0].Id.Should().Be(@event.Prices[0].Id);
@@ -129,19 +164,18 @@ public class ProductTests
     }
     
     [Fact]
-    public void ShouldUpdateProduct_WhenProductChangedEventIsApplied()
+    public void ShouldUpdateProduct_WhenProductNameChangedEventIsApplied()
     {
         // Arrange
         var product = AnExistingProduct();
 
-        var @event = new ProductChanged("New Name", 99);
+        var @event = new ProductNameChanged("New Name");
         
         // Act
         product.Apply(@event);
 
         // Assert
         product.Name.Should().Be(@event.Name);
-        product.NumberOfOffers.Should().Be(@event.NumberOfOffers);
     }
     
     [Fact]
@@ -253,7 +287,7 @@ public class ProductTests
         };
         
         // Act
-        var act = () => product.Update(product.Name, product.NumberOfOffers, true, prices);
+        var act = () => product.Update(product.Name, product.Description, true, product.FeatureFlags, product.Attributes, prices);
         
         // Assert
         act.Should().Throw<ArgumentException>();
@@ -261,7 +295,18 @@ public class ProductTests
     
     private static Product AnExistingProduct(bool isActive = false)
     {
-        var product = new Product(DefaultProductId,"Test Product", 100, isActive, [
+        var product = new Product("Test Product", "Desc", isActive, 
+        new FeatureFlags
+        {
+            HasPriority = true
+        },
+        new Attributes
+        {
+          NumberOfBumps  = 1,
+          NumberOfLocations = 1,
+          Duration = TimeSpan.FromDays(1)
+        },
+        [
             new Price(DefaultPriceId, new DateTimeRange(), DefaultPrice),
             new Price(FuturePriceId, new DateTimeRange(DateTimeOffset.UtcNow.Date.AddDays(10), null), FuturePrice),
         ]);

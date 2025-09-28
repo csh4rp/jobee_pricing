@@ -22,7 +22,6 @@ public class GetProductQueryHandler
         {
             Id = product.Id,
             Name = product.Name,
-            NumberOfOffers = product.NumberOfOffers,
             Prices = [.. product.Prices.Select(p => new PriceModel
             {
                 Id = p.Id,
