@@ -2,6 +2,7 @@ using AwesomeAssertions;
 using Jobee.Pricing.Application.Common;
 using Jobee.Pricing.Application.Products.Common;
 using Jobee.Pricing.Application.Products.Creation;
+using Jobee.Pricing.Contracts.Common;
 using Jobee.Pricing.Contracts.Products.Common;
 using Jobee.Pricing.Contracts.Products.Creation;
 

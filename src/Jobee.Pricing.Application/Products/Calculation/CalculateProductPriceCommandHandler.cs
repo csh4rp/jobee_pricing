@@ -6,9 +6,9 @@ using Jobee.Pricing.Domain.Settings;
 
 namespace Jobee.Pricing.Application.Products.Calculation;
 
-public class CalculatePriceCommandHandler
+public class CalculateProductPriceCommandHandler
 {
-    public static async Task<PriceCalculationResult> Handle(CalculatePriceCommand request,
+    public static async Task<PriceCalculationResult> Handle(CalculateProductPriceCommand request,
         IProductRepository productRepository,
         CurrencyConverter currencyConverter,
         TimeProvider timeProvider,

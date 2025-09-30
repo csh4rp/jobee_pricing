@@ -1,4 +1,4 @@
-namespace Jobee.Pricing.Application.Products.Common;
+namespace Jobee.Pricing.Application.Common;
 
 public abstract class ValidationErrorCodes
 {

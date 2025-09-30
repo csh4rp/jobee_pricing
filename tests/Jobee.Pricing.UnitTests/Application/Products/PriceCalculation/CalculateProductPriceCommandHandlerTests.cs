@@ -10,7 +10,7 @@ using NSubstitute;
 namespace Jobee.Pricing.UnitTests.Application.Products.PriceCalculation;
 
 [Collection("Products")]
-public class CalculatePriceCommandHandlerTests
+public class CalculateProductPriceCommandHandlerTests
 {
     private static readonly DateTimeOffset CurrentDate = new(2025, 9, 1, 0, 0, 0, TimeSpan.Zero);
     
@@ -20,7 +20,7 @@ public class CalculatePriceCommandHandlerTests
     private readonly TestTimeProvider _testTimeProvider;
     private readonly CurrencyConverter _currencyConverter;
 
-    public CalculatePriceCommandHandlerTests(ProductFixture productFixture, TestTimeProvider testTimeProvider)
+    public CalculateProductPriceCommandHandlerTests(ProductFixture productFixture, TestTimeProvider testTimeProvider)
     {
         _productFixture = productFixture;
         _testTimeProvider = testTimeProvider;
@@ -39,15 +39,14 @@ public class CalculatePriceCommandHandlerTests
         _productRepository.GetByIdAsync(product.Id, Arg.Any<CancellationToken>())
             .Returns(product);
         
-        var command = new CalculatePriceCommand
+        var command = new CalculateProductPriceCommand
         {
             ProductId = product.Id,
-            Currency = CurrencyModel.PLN,
-            Quantity = 1
+            Currency = CurrencyModel.PLN
         };
         
         // Act
-        var result = await CalculatePriceCommandHandler.Handle(command, _productRepository, _currencyConverter, _testTimeProvider, CancellationToken.None);
+        var result = await CalculateProductPriceCommandHandler.Handle(command, _productRepository, _currencyConverter, _testTimeProvider, CancellationToken.None);
         
         // Assert
         result.Amount.Should().Be(_productFixture.CurrentPrice.Amount);
@@ -63,15 +62,14 @@ public class CalculatePriceCommandHandlerTests
         _productRepository.GetByIdAsync(product.Id, Arg.Any<CancellationToken>())
             .Returns(product);
         
-        var command = new CalculatePriceCommand
+        var command = new CalculateProductPriceCommand
         {
             ProductId = product.Id,
             Currency = CurrencyModel.USD,
-            Quantity = 1
         };
         
         // Act
-        var result = await CalculatePriceCommandHandler.Handle(command, _productRepository, _currencyConverter, _testTimeProvider, CancellationToken.None);
+        var result = await CalculateProductPriceCommandHandler.Handle(command, _productRepository, _currencyConverter, _testTimeProvider, CancellationToken.None);
         
         // Assert
         result.Amount.Should().Be(_productFixture.CurrentPrice.Amount / 4);

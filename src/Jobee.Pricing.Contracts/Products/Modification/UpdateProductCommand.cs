@@ -1,3 +1,4 @@
+using Jobee.Pricing.Contracts.Common;
 using Jobee.Pricing.Contracts.Products.Common;
 
 namespace Jobee.Pricing.Contracts.Products.Modification;

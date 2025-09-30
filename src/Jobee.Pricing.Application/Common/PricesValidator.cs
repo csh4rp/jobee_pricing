@@ -1,10 +1,7 @@
 using FluentValidation;
 using FluentValidation.Results;
-using Jobee.Pricing.Application.Products.Common;
 using Jobee.Pricing.Contracts.Products.Common;
 using Jobee.Pricing.Domain.Common;
-using Jobee.Pricing.Domain.Common.ValueObjects;
-using Jobee.Utils.Contracts;
 
 namespace Jobee.Pricing.Application.Common;
 

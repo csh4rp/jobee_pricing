@@ -22,7 +22,7 @@ public class ProductRepository : IProductRepository
     public async Task UpdateAsync(Product product, CancellationToken cancellationToken)
     {
         await using var session = _documentStore.LightweightSession();
-        _ = session.Events.Append(product.Id, product.DequeueEvents());
+        _ = session.Events.Append(product.Id.ToString(), product.DequeueEvents());
 
         await session.SaveChangesAsync(cancellationToken);
     }
@@ -30,7 +30,7 @@ public class ProductRepository : IProductRepository
     public async Task ArchiveAsync(Product product, CancellationToken cancellationToken)
     {
         await using var session = _documentStore.LightweightSession();
-        session.Events.ArchiveStream(product.Id);
+        session.Events.ArchiveStream(product.Id.ToString());
 
         await session.SaveChangesAsync(cancellationToken);
     }

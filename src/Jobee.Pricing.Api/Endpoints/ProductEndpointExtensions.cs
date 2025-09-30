@@ -48,14 +48,14 @@ public static class ProductEndpointExtensions
             .Produces<ValidationErrorResponse>(StatusCodes.Status400BadRequest)
             .Produces<NotFoundErrorResponse>(StatusCodes.Status404NotFound);
 
-        group.MapPost("calculate-price", async ([FromBody] CalculatePriceCommand command,
+        group.MapPost("calculate-price", async ([FromBody] CalculateProductPriceCommand command,
                 IMessageBus bus,
                 CancellationToken cancellationToken) =>
             {
                 var result = await bus.InvokeAsync<PriceCalculationResult>(command, cancellationToken);
                 return Results.Ok(result);
             })
-            .AddEndpointFilter<ValidationEndpointFilter<CalculatePriceCommand>>()
+            .AddEndpointFilter<ValidationEndpointFilter<CalculateProductPriceCommand>>()
             .Produces<PriceCalculationResult>(StatusCodes.Status200OK)
             .Produces<ValidationErrorResponse>(StatusCodes.Status400BadRequest);
 

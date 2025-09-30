@@ -1,4 +1,5 @@
 using Jobee.Pricing.Application.Products.Modification;
+using Jobee.Pricing.Contracts.Common;
 using Jobee.Pricing.Contracts.Products.Common;
 using Jobee.Pricing.Contracts.Products.Modification;
 using Jobee.Pricing.Domain.Common;
