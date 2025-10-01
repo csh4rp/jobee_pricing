@@ -1,7 +1,7 @@
 using AwesomeAssertions;
 using Jobee.Pricing.Application.Products.Calculation;
+using Jobee.Pricing.Contracts.Products.Calculation;
 using Jobee.Pricing.Contracts.Products.Common;
-using Jobee.Pricing.Contracts.Products.PriceCalculation;
 using Jobee.Pricing.Domain.Products;
 using Jobee.Pricing.Domain.Settings;
 using Jobee.Pricing.UnitTests.Fixtures;

@@ -1,5 +1,5 @@
+using Jobee.Pricing.Contracts.Products.Calculation;
 using Jobee.Pricing.Contracts.Products.Models;
-using Jobee.Pricing.Contracts.Products.PriceCalculation;
 using Jobee.Pricing.Domain.Common.ValueObjects;
 using Jobee.Pricing.Domain.Products;
 using Jobee.Pricing.Domain.Settings;
@@ -8,7 +8,7 @@ namespace Jobee.Pricing.Application.Products.Calculation;
 
 public class CalculateProductPriceCommandHandler
 {
-    public static async Task<PriceCalculationResult> Handle(CalculateProductPriceCommand request,
+    public static async Task<ProductPriceCalculationResult> Handle(CalculateProductPriceCommand request,
         IProductRepository productRepository,
         CurrencyConverter currencyConverter,
         TimeProvider timeProvider,
@@ -20,6 +20,6 @@ public class CalculateProductPriceCommandHandler
 
         var calculatedPrice = await currencyConverter.ConvertAsync(price.Money, currency, cancellationToken);
 
-        return new PriceCalculationResult(calculatedPrice.Amount, request.Currency);
+        return new ProductPriceCalculationResult(calculatedPrice.Amount, request.Currency);
     }
 }

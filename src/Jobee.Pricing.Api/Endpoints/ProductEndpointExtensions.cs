@@ -1,8 +1,8 @@
 using Jobee.Pricing.Contracts.Products.Archiving;
+using Jobee.Pricing.Contracts.Products.Calculation;
 using Jobee.Pricing.Contracts.Products.Creation;
 using Jobee.Pricing.Contracts.Products.Models;
 using Jobee.Pricing.Contracts.Products.Modification;
-using Jobee.Pricing.Contracts.Products.PriceCalculation;
 using Jobee.Pricing.Contracts.Products.Queries;
 using Jobee.Utils.Api.ApiResults;
 using Jobee.Utils.Api.Responses;
@@ -52,11 +52,11 @@ public static class ProductEndpointExtensions
                 IMessageBus bus,
                 CancellationToken cancellationToken) =>
             {
-                var result = await bus.InvokeAsync<PriceCalculationResult>(command, cancellationToken);
+                var result = await bus.InvokeAsync<ProductPriceCalculationResult>(command, cancellationToken);
                 return Results.Ok(result);
             })
             .AddEndpointFilter<ValidationEndpointFilter<CalculateProductPriceCommand>>()
-            .Produces<PriceCalculationResult>(StatusCodes.Status200OK)
+            .Produces<ProductPriceCalculationResult>(StatusCodes.Status200OK)
             .Produces<ValidationErrorResponse>(StatusCodes.Status400BadRequest);
 
         group.MapDelete("{id:guid}", async ([FromRoute] Guid id,
