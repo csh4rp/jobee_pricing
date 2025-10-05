@@ -1,5 +1,6 @@
 using Jobee.Pricing.Domain.Common;
 using Jobee.Pricing.Domain.Events;
+using Jobee.Pricing.Domain.Packages;
 
 namespace Jobee.Pricing.Domain.Products;
 
@@ -96,11 +97,11 @@ public class Product : Entity<Guid>
             var existingPrice = _prices.FirstOrDefault(p => p.Id == price.Id);
             if (existingPrice is not null && !existingPrice.Equals(price))
             {
-                EnqueueEvent(new PriceChanged(existingPrice.Id, existingPrice.DateTimeRange, price.Money));
+                EnqueueEvent(new ProductPriceChanged(existingPrice.Id, existingPrice.DateTimeRange, price.Money));
             }
             else if (existingPrice is null)
             {
-                EnqueueEvent(new PriceCreated(price.Id, price.DateTimeRange, price.Money));
+                EnqueueEvent(new ProductPriceCreated(price.Id, price.DateTimeRange, price.Money));
             }
         }
 
@@ -109,7 +110,7 @@ public class Product : Entity<Guid>
             var isPriceRemoved = prices.All(p => p.Id != price.Id);
             if (isPriceRemoved)
             {
-                EnqueueEvent(new PriceRemoved(price.Id, price.DateTimeRange, price.Money));
+                EnqueueEvent(new ProductPriceRemoved(price.Id, price.DateTimeRange, price.Money));
             }
         }
     }
@@ -151,7 +152,7 @@ public class Product : Entity<Guid>
         };
     }
     
-    public void Apply(PriceCreated @event)
+    public void Apply(ProductPriceCreated @event)
     {
         _prices.Add(new Price(
             @event.Id,
@@ -159,13 +160,13 @@ public class Product : Entity<Guid>
             @event.Money));
     }
     
-    public void Apply(PriceRemoved @event)
+    public void Apply(ProductPriceRemoved @event)
     {
         var price = _prices.First(p => p.Id == @event.Id);
         _prices.Remove(price);
     }
     
-    public void Apply(PriceChanged @event)
+    public void Apply(ProductPriceChanged @event)
     {
         var price = _prices.First(p => p.Id == @event.Id);
 

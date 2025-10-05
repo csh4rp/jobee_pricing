@@ -7,7 +7,7 @@ using Jobee.Pricing.Domain.Settings;
 using Jobee.Pricing.UnitTests.Fixtures;
 using NSubstitute;
 
-namespace Jobee.Pricing.UnitTests.Application.Products.PriceCalculation;
+namespace Jobee.Pricing.UnitTests.Application.Products.Calculation;
 
 [Collection("Products")]
 public class CalculateProductPriceCommandHandlerTests
@@ -46,7 +46,8 @@ public class CalculateProductPriceCommandHandlerTests
         };
         
         // Act
-        var result = await CalculateProductPriceCommandHandler.Handle(command, _productRepository, _currencyConverter, _testTimeProvider, CancellationToken.None);
+        var result = await CalculateProductPriceCommandHandler.Handle(command,
+            _productRepository, _currencyConverter, _testTimeProvider, CancellationToken.None);
         
         // Assert
         result.Amount.Should().Be(_productFixture.CurrentPrice.Amount);
@@ -69,7 +70,8 @@ public class CalculateProductPriceCommandHandlerTests
         };
         
         // Act
-        var result = await CalculateProductPriceCommandHandler.Handle(command, _productRepository, _currencyConverter, _testTimeProvider, CancellationToken.None);
+        var result = await CalculateProductPriceCommandHandler.Handle(command, _productRepository, _currencyConverter,
+            _testTimeProvider, CancellationToken.None);
         
         // Assert
         result.Amount.Should().Be(_productFixture.CurrentPrice.Amount / 4);

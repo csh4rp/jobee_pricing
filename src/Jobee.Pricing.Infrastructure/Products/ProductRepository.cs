@@ -15,23 +15,21 @@ public class ProductRepository : IProductRepository
     {
         await using var session = _documentStore.LightweightSession();
         _ = session.Events.StartStream<Product>(product.Id, product.DequeueEvents());
-
         await session.SaveChangesAsync(cancellationToken);
     }
 
     public async Task UpdateAsync(Product product, CancellationToken cancellationToken)
     {
         await using var session = _documentStore.LightweightSession();
-        _ = session.Events.Append(product.Id.ToString(), product.DequeueEvents());
-
+        _ = session.Events.Append(product.Id, product.DequeueEvents());
         await session.SaveChangesAsync(cancellationToken);
     }
 
     public async Task ArchiveAsync(Product product, CancellationToken cancellationToken)
     {
         await using var session = _documentStore.LightweightSession();
-        session.Events.ArchiveStream(product.Id.ToString());
-
+        session.Events.Append(product.Id, new ProductArchived());
+        session.Events.ArchiveStream(product.Id);
         await session.SaveChangesAsync(cancellationToken);
     }
 
@@ -40,5 +38,12 @@ public class ProductRepository : IProductRepository
         await using var session = _documentStore.OpenSession(new SessionOptions());
         return await session.Events.AggregateStreamToLastKnownAsync<Product>(id, token: cancellationToken)
                       ?? throw new EntityNotFoundException(nameof(Product), id);
+    }
+
+    public async Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken)
+    {
+        await using var session = _documentStore.LightweightSession();
+        var product = await session.Events.AggregateStreamToLastKnownAsync<Product>(id, token: cancellationToken);
+        return product is not null;
     }
 }

@@ -97,17 +97,28 @@ public class CreateProductValidatorTests
                     StartsAt = new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero),
                     EndsAt = new DateTimeOffset(2025, 2, 1, 0, 0, 0, TimeSpan.Zero)
                 }
-
             }
         };
 
         var validationResult = Validator.Validate(command);
         
         validationResult.IsValid.Should().BeFalse();
-        validationResult.Errors.Should().HaveCount(5);
+        validationResult.Errors.Should().HaveCount(8);
         validationResult.Errors.Should().Contain(e => e.ErrorCode == "NotEmptyValidator"
                                                       && e.PropertyName == nameof(CreateProductCommand.Name));
+        
+        validationResult.Errors.Should().Contain(e => e.ErrorCode == "NotEmptyValidator"
+                                                      && e.PropertyName == nameof(CreateProductCommand.Description));
 
+        validationResult.Errors.Should().Contain(e => e.ErrorCode == "GreaterThanOrEqualValidator"
+                                                      && e.PropertyName == "Attributes.NumberOfBumps");
+        
+        validationResult.Errors.Should().Contain(e => e.ErrorCode == "GreaterThanOrEqualValidator"
+                                                      && e.PropertyName == "Attributes.DurationInDays");
+        
+        validationResult.Errors.Should().Contain(e => e.ErrorCode == "GreaterThanOrEqualValidator"
+                                                      && e.PropertyName == "Attributes.NumberOfLocations");
+        
         validationResult.Errors.Should().Contain(e => e.ErrorCode == "GreaterThanOrEqualValidator"
                                                       && e.PropertyName == "Prices[0].Amount");
 

@@ -13,6 +13,10 @@ public sealed class UpdateProductCommandValidator : AbstractValidator<UpdateProd
             .NotEmpty()
             .MaximumLength(255);
 
+        RuleFor(x => x.Description)
+            .NotEmpty()
+            .MaximumLength(4000);
+        
         RuleFor(x => x.Attributes)
             .SetValidator(new AttributesValidator());
 

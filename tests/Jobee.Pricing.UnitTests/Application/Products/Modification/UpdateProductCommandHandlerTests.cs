@@ -55,10 +55,10 @@ public class UpdateProductCommandHandlerTests
                 Id = Guid.NewGuid(),
                 EndsAt = null,
                 StartsAt = null
-            }]
+            }],
+            ProductId = existingProduct.Id
         };
-        command.SetProductId(existingProduct.Id);
-        
+
         // Act
         await UpdateProductCommandHandler.Handle(command, _productRepository, _settingsService, _logger, CancellationToken.None);
         

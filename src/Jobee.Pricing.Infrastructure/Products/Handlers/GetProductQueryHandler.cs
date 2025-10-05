@@ -1,7 +1,7 @@
 using Jobee.Pricing.Contracts.Products.Models;
 using Jobee.Pricing.Contracts.Products.Queries;
 using Jobee.Pricing.Domain.Products;
-using Jobee.Pricing.Infrastructure.Products.Models;
+using Jobee.Pricing.Infrastructure.Products.Projections;
 using Jobee.Utils.Application.Exceptions;
 using Marten;
 
@@ -27,8 +27,8 @@ public class GetProductQueryHandler
                 Id = p.Id,
                 Amount = p.Money.Amount,
                 Currency = p.Money.Currency,
-                EndsAt = p.EndsAt,
-                StartsAt = p.StartsAt
+                EndsAt = p.DateTimeRange.EndsAt,
+                StartsAt = p.DateTimeRange.StartsAt
             })]
         };
     }

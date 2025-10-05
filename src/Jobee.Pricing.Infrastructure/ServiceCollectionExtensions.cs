@@ -2,6 +2,7 @@ using JasperFx.Events.Projections;
 using Jobee.Pricing.Domain.Products;
 using Jobee.Pricing.Domain.Settings;
 using Jobee.Pricing.Infrastructure.Products;
+using Jobee.Pricing.Infrastructure.Products.Projections;
 using Jobee.Pricing.Infrastructure.Settings;
 using Marten;
 using Microsoft.Extensions.Configuration;

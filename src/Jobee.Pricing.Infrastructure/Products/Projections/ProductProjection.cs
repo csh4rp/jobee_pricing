@@ -1,11 +1,11 @@
 using JasperFx.Events;
 using Jobee.Pricing.Domain.Common;
 using Jobee.Pricing.Domain.Events;
+using Jobee.Pricing.Domain.Packages;
 using Jobee.Pricing.Domain.Products;
-using Jobee.Pricing.Infrastructure.Products.Models;
 using Marten.Events.Aggregation;
 
-namespace Jobee.Pricing.Infrastructure.Products;
+namespace Jobee.Pricing.Infrastructure.Products.Projections;
 
 public class ProductProjection : SingleStreamProjection<ProductProjectionModel, Guid>
 {
@@ -32,32 +32,26 @@ public class ProductProjection : SingleStreamProjection<ProductProjectionModel, 
         model.LastModifiedAt = @event.Timestamp;
     }
     
-    public void Apply(IEvent<PriceChanged> @event, ProductProjectionModel model)
+    public void Apply(IEvent<PackagePriceChanged> @event, ProductProjectionModel model)
     {
         model.LastModifiedAt = @event.Timestamp;
         var index = model.Prices.FindIndex(p => p.Id == @event.Data.Id);
-        model.Prices[index] = new  PriceProjectionModel
-        {
-            Id = @event.Data.Id,
-            Money = @event.Data.Money,
-            StartsAt = @event.Data.DateTimeRange.StartsAt,
-            EndsAt = @event.Data.DateTimeRange.EndsAt
-        };
+        model.Prices[index] = new Price(
+            @event.Data.Id,
+            @event.Data.DateTimeRange,
+            @event.Data.Money);
     }
     
-    public void Apply(IEvent<PriceCreated> @event, ProductProjectionModel model)
+    public void Apply(IEvent<PackagePriceCreated> @event, ProductProjectionModel model)
     {
         model.LastModifiedAt = @event.Timestamp;
-        model.Prices.Add(new PriceProjectionModel
-        {
-            Id = @event.Data.Id,
-            Money = @event.Data.Money,
-            StartsAt = @event.Data.DateTimeRange.StartsAt,
-            EndsAt = @event.Data.DateTimeRange.EndsAt
-        });
+        model.Prices.Add(new Price(
+            @event.Data.Id,
+            @event.Data.DateTimeRange,
+            @event.Data.Money));
     }
     
-    public void Apply(IEvent<PriceRemoved> @event, ProductProjectionModel model)
+    public void Apply(IEvent<PackagePriceRemoved> @event, ProductProjectionModel model)
     {
         model.LastModifiedAt = @event.Timestamp;
         var index = model.Prices.FindIndex(p => p.Id == @event.Data.Id);
@@ -73,13 +67,7 @@ public class ProductProjection : SingleStreamProjection<ProductProjectionModel, 
             IsActive = @event.Data.IsActive,
             CreatedAt = @event.Timestamp,
             LastModifiedAt = null,
-            Prices = [.. @event.Data.Prices.Select(price => new PriceProjectionModel
-            {
-                Id = price.Id,
-                Money = price.Money,
-                StartsAt = price.DateTimeRange.StartsAt,
-                EndsAt = price.DateTimeRange.EndsAt
-            })]
+            Prices = [.. @event.Data.Prices]
         };
     }
 }

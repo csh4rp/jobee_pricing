@@ -3,6 +3,7 @@ using Jobee.Pricing.Domain;
 using Jobee.Pricing.Domain.Common;
 using Jobee.Pricing.Domain.Common.ValueObjects;
 using Jobee.Pricing.Domain.Events;
+using Jobee.Pricing.Domain.Packages;
 using Jobee.Pricing.Domain.Products;
 
 namespace Jobee.Pricing.UnitTests.Domain;
@@ -56,7 +57,7 @@ public class ProductTests
         const string newDescription = "New Desc";
         var newFeatureFlags = new FeatureFlags
         {
-            HasPriority = true
+            HasPriority = false
         };
         var newAttributes = new Attributes
         {
@@ -79,32 +80,38 @@ public class ProductTests
         // Assert
         product.Name.Should().Be(newName);
         product.IsActive.Should().BeTrue();
-        events.Should().HaveCount(5);
+        events.Should().HaveCount(8);
 
         var productNameChangedEvent = (ProductNameChanged?)events.FirstOrDefault(e => e is ProductNameChanged);
         productNameChangedEvent.Should().NotBeNull();
         productNameChangedEvent.Name.Should().Be(newName);
         
-        var productDescriptionChangedEvent = (ProductDescriptionChanged?)events.FirstOrDefault(e => e is ProductNameChanged);
+        var productDescriptionChangedEvent = (ProductDescriptionChanged?)events.FirstOrDefault(e => e is ProductDescriptionChanged);
         productDescriptionChangedEvent.Should().NotBeNull();
         productDescriptionChangedEvent.Description.Should().Be(newDescription);
         
         var productActivatedEvent = (ProductActivated?)events.FirstOrDefault(e => e is ProductActivated);
         productActivatedEvent.Should().NotBeNull();
         
-        var priceCreatedEvent = (PriceCreated?)events.FirstOrDefault(e => e is PriceCreated);
+        var productAttributesChangedEvent = (ProductAttributesChanged?)events.FirstOrDefault(e => e is ProductAttributesChanged);
+        productAttributesChangedEvent.Should().NotBeNull();
+        
+        var productFeatureFlagsChangedEvent = (ProductFeatureFlagsChanged?)events.FirstOrDefault(e => e is ProductFeatureFlagsChanged);
+        productFeatureFlagsChangedEvent.Should().NotBeNull();
+        
+        var priceCreatedEvent = (ProductPriceCreated?)events.FirstOrDefault(e => e is ProductPriceCreated);
         priceCreatedEvent.Should().NotBeNull();
         priceCreatedEvent.Id.Should().Be(newPriceId);
         priceCreatedEvent.Money.Amount.Should().Be(100);
         priceCreatedEvent.DateTimeRange.Should().Be(new DateTimeRange(DateTimeOffset.UtcNow.Date.AddDays(-1), null));
 
-        var priceChangedEvent = (PriceChanged?)events.FirstOrDefault(e => e is PriceChanged);
+        var priceChangedEvent = (ProductPriceChanged?)events.FirstOrDefault(e => e is ProductPriceChanged);
         priceChangedEvent.Should().NotBeNull();
         priceChangedEvent.Id.Should().Be(DefaultPriceId);
         priceChangedEvent.Money.Amount.Should().Be(99);
         priceChangedEvent.DateTimeRange.Should().Be(new DateTimeRange());
         
-        var priceRemovedEvent = (PriceRemoved?)events.FirstOrDefault(e => e is PriceRemoved);
+        var priceRemovedEvent = (ProductPriceRemoved?)events.FirstOrDefault(e => e is ProductPriceRemoved);
         priceRemovedEvent.Should().NotBeNull();
         priceRemovedEvent.Id.Should().Be(FuturePriceId);
         priceRemovedEvent.Money.Amount.Should().Be(90);
@@ -125,7 +132,7 @@ public class ProductTests
         events.Should().ContainSingle();
         events[0].Should().BeOfType<ProductDeactivated>();
         var @event = (ProductDeactivated)events[0];
-        @events.Should().NotBeNull();
+        @event.Should().NotBeNull();
     }
     
     [Fact]
@@ -156,6 +163,9 @@ public class ProductTests
         
         product.Id.Should().Be(@event.ProductId);
         product.Name.Should().Be(@event.Name);
+        product.Description.Should().Be(@event.Description);
+        product.Attributes.Should().Be(@event.Attributes);
+        product.FeatureFlags.Should().Be(@event.FeatureFlags);
         product.IsActive.Should().Be(@event.IsActive);
         product.Prices.Should().HaveCount(1);
         product.Prices[0].Id.Should().Be(@event.Prices[0].Id);
@@ -214,7 +224,7 @@ public class ProductTests
         // Arrange
         var product = AnExistingProduct();
 
-        var @event = new PriceCreated(Guid.NewGuid(), new DateTimeRange(DateTimeOffset.UtcNow.AddDays(100), null), new Money(100, Currency.EUR));
+        var @event = new ProductPriceCreated(Guid.NewGuid(), new DateTimeRange(DateTimeOffset.UtcNow.AddDays(100), null), new Money(100, Currency.EUR));
         
         // Act
         product.Apply(@event);
@@ -229,7 +239,7 @@ public class ProductTests
         // Arrange
         var product = AnExistingProduct();
 
-        var @event = new PriceChanged(FuturePriceId, new DateTimeRange(DateTimeOffset.UtcNow.AddDays(100), null), new Money(100, Currency.EUR));
+        var @event = new ProductPriceChanged(FuturePriceId, new DateTimeRange(DateTimeOffset.UtcNow.AddDays(100), null), new Money(100, Currency.EUR));
         
         // Act
         product.Apply(@event);
@@ -246,7 +256,7 @@ public class ProductTests
         // Arrange
         var product = AnExistingProduct();
 
-        var @event = new PriceRemoved(FuturePriceId, new DateTimeRange(DateTimeOffset.UtcNow.AddDays(100), null), new Money(100, Currency.EUR));
+        var @event = new ProductPriceRemoved(FuturePriceId, new DateTimeRange(DateTimeOffset.UtcNow.AddDays(100), null), new Money(100, Currency.EUR));
         
         // Act
         product.Apply(@event);

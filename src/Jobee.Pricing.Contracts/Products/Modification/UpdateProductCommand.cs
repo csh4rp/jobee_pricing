@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Jobee.Pricing.Contracts.Common;
 using Jobee.Pricing.Contracts.Products.Common;
 
@@ -5,7 +6,8 @@ namespace Jobee.Pricing.Contracts.Products.Modification;
 
 public record UpdateProductCommand
 {
-    public Guid ProductId { get; private set; }
+    [JsonIgnore]
+    public Guid ProductId { get; set; }
 
     public required string Name { get; init; }
 
@@ -18,6 +20,4 @@ public record UpdateProductCommand
     public required AttributesModel Attributes { get; init; }
     
     public required IReadOnlyList<UpdatePriceModel> Prices { get; init; }
-    
-    public void SetProductId(Guid id) => ProductId = id;
 }
