@@ -38,7 +38,7 @@ public static class ProductEndpointExtensions
                 IMessageBus bus,
                 CancellationToken cancellationToken) =>
             {
-                command.SetProductId(id);
+                command.ProductId = id;
 
                 await bus.InvokeAsync(command, cancellationToken);
                 return Results.NoContent();

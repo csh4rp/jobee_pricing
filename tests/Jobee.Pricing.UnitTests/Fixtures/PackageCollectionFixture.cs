@@ -1,7 +1,6 @@
 namespace Jobee.Pricing.UnitTests.Fixtures;
 
 [CollectionDefinition("Packages")]
-public class PackageCollectionFixture
+public class PackageCollectionFixture : ICollectionFixture<PackageFixture>
 {
-    
 }
