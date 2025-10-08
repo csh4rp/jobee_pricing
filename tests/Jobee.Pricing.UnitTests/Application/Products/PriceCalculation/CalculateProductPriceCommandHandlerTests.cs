@@ -7,7 +7,7 @@ using Jobee.Pricing.Domain.Settings;
 using Jobee.Pricing.UnitTests.Fixtures;
 using NSubstitute;
 
-namespace Jobee.Pricing.UnitTests.Application.Products.Calculation;
+namespace Jobee.Pricing.UnitTests.Application.Products.PriceCalculation;
 
 [Collection("Products")]
 public class CalculateProductPriceCommandHandlerTests

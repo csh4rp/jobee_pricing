@@ -48,10 +48,10 @@ public class CreatePackageCommandHandlerTests
         var result = await CreatePackageCommandHandler.Handle(command, 
             _packageRepository, _productRepository, _settingsService, _logger, CancellationToken.None);
         
-        result.Should().NotBeEmpty();
+        result.Should().NotBeNull();
 
         await _packageRepository.Received(1)
-            .AddAsync(Arg.Is<Package>(p => p.Id == result
+            .AddAsync(Arg.Is<Package>(p => p.Id == result.Id
             && p.IsActive == command.IsActive
             && p.Name == command.Name
             && p.Description == command.Description

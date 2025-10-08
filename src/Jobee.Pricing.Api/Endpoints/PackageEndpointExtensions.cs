@@ -1,7 +1,4 @@
-using Jobee.Pricing.Contracts.Packages.Archiving;
-using Jobee.Pricing.Contracts.Packages.Calculation;
 using Jobee.Pricing.Contracts.Packages.Creation;
-using Jobee.Pricing.Contracts.Packages.Modification;
 using Jobee.Pricing.Contracts.Products.Archiving;
 using Jobee.Pricing.Contracts.Products.Calculation;
 using Jobee.Pricing.Contracts.Products.Creation;
@@ -18,45 +15,45 @@ using Wolverine;
 
 namespace Jobee.Pricing.Api.Endpoints;
 
-public static class ProductEndpointExtensions
+public static class PackageEndpointExtensions
 {
-    private const string Prefix = "products";
+    private const string Prefix = "packages";
 
-    public static WebApplication AddProductEndpoints(this WebApplication app)
+    public static WebApplication AddPackageEndpoints(this WebApplication app)
     {
         var group = app.MapGroup(Prefix);
 
-        group.MapPost(string.Empty, async ([FromBody] CreateProductCommand command,
+        group.MapPost(string.Empty, async ([FromBody] CreatePackageCommand command,
                 IMessageBus bus,
                 CancellationToken cancellationToken) =>
             {
                 var result = await bus.InvokeAsync<CreatedResponse<Guid>>(command, cancellationToken);
                 return new CreatedAtResult<Guid>(result);
             })
-            .AddEndpointFilter<ValidationEndpointFilter<CreatePackageCommand>>()
+            .AddEndpointFilter<ValidationEndpointFilter<CreateProductCommand>>()
             .Produces<CreatedResponse<Guid>>(StatusCodes.Status201Created)
             .Produces<ValidationErrorResponse>(StatusCodes.Status400BadRequest);
 
-        group.MapPut("{id:guid}", async ([FromBody] UpdatePackageCommand command,
+        group.MapPut("{id:guid}", async ([FromBody] UpdateProductCommand command,
                 [FromRoute] Guid id,
                 IMessageBus bus,
                 CancellationToken cancellationToken) =>
             {
-                command.PackageId = id;
+                command.ProductId = id;
 
                 await bus.InvokeAsync(command, cancellationToken);
                 return Results.NoContent();
             })
-            .AddEndpointFilter<ValidationEndpointFilter<UpdatePackageCommand>>()
+            .AddEndpointFilter<ValidationEndpointFilter<UpdateProductCommand>>()
             .Produces(StatusCodes.Status204NoContent)
             .Produces<ValidationErrorResponse>(StatusCodes.Status400BadRequest)
             .Produces<NotFoundErrorResponse>(StatusCodes.Status404NotFound);
 
-        group.MapPost("calculate-price", async ([FromBody] CalculatePackagePriceCommand command,
+        group.MapPost("calculate-price", async ([FromBody] CalculateProductPriceCommand command,
                 IMessageBus bus,
                 CancellationToken cancellationToken) =>
             {
-                var result = await bus.InvokeAsync<PackagePriceCalculationResult>(command, cancellationToken);
+                var result = await bus.InvokeAsync<ProductPriceCalculationResult>(command, cancellationToken);
                 return Results.Ok(result);
             })
             .AddEndpointFilter<ValidationEndpointFilter<CalculateProductPriceCommand>>()
@@ -67,12 +64,33 @@ public static class ProductEndpointExtensions
                 IMessageBus bus,
                 CancellationToken cancellationToken) =>
             {
-                var command = new ArchivePackageCommand(id);
+                var command = new ArchiveProductCommand(id);
                 await bus.InvokeAsync(command, cancellationToken);
                 return Results.NoContent();
             })
             .Produces(StatusCodes.Status204NoContent)
             .Produces<NotFoundErrorResponse>(StatusCodes.Status404NotFound);
+
+        group.MapGet("{id:guid}", async ([FromRoute] Guid id,
+                IMessageBus bus,
+                CancellationToken cancellationToken) =>
+            {
+                var query = new GetProductQuery(id);
+                var result = await bus.InvokeAsync<ProductDetailsModel>(query, cancellationToken);
+                return Results.Ok(result);
+            })
+            .Produces<ProductDetailsModel>(StatusCodes.Status200OK)
+            .Produces<NotFoundErrorResponse>(StatusCodes.Status404NotFound);
+        ;
+
+        group.MapGet(string.Empty, async ([AsParameters] GetProductsQuery query,
+                IMessageBus bus,
+                CancellationToken cancellationToken) =>
+            {
+                var result = await bus.InvokeAsync<PaginatedResponse<ProductModel>>(query, cancellationToken);
+                return PaginatedResult.From(result);
+            })
+            .Produces<PaginatedResult<ProductModel>>(StatusCodes.Status200OK);
 
         return app;
     }

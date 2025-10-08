@@ -1,4 +1,5 @@
 using Jobee.Pricing.Contracts.Products.Creation;
+using Jobee.Pricing.Contracts.Products.Models;
 using Jobee.Pricing.Domain;
 using Jobee.Pricing.Domain.Common;
 using Jobee.Pricing.Domain.Common.ValueObjects;

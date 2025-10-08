@@ -3,7 +3,6 @@ using Jobee.Pricing.Application.Packages.Modification;
 using Jobee.Pricing.Application.Products.Modification;
 using Jobee.Pricing.Contracts.Packages.Modification;
 using Jobee.Pricing.Domain.Packages;
-using Jobee.Pricing.Domain.Products;
 using Jobee.Pricing.Domain.Settings;
 using Jobee.Pricing.UnitTests.Fixtures;
 using Microsoft.Extensions.Logging;
@@ -14,7 +13,6 @@ namespace Jobee.Pricing.UnitTests.Application.Packages.Modification;
 [Collection("Packages")]
 public class UpdatePackageCommandHandlerTests
 {
-    private readonly IProductRepository _productRepository = Substitute.For<IProductRepository>();
     private readonly IPackageRepository _packageRepository = Substitute.For<IPackageRepository>();
     private readonly ISettingRepository _settingRepository = Substitute.For<ISettingRepository>();
     private readonly ILogger<UpdatePackageCommandHandler> _logger = Substitute.For<ILogger<UpdatePackageCommandHandler>>();
