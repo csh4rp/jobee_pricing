@@ -33,6 +33,9 @@ public class PackageProjection : MultiStreamProjection<PackageProjectionModel, G
                     Name = createdEvent.Data.Name,
                     Description = createdEvent.Data.Description,
                     IsActive = createdEvent.Data.IsActive,
+                    Quantity = createdEvent.Data.Quantity,
+                    Prices = [.. createdEvent.Data.Prices],
+                    ProductName = string.Empty, // initialized; will be updated if ProductNameChanged event arrives
                     CreatedAt = createdEvent.Timestamp,
                 };
                 return (model, ActionType.Store);

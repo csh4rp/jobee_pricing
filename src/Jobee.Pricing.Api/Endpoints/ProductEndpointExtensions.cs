@@ -37,26 +37,26 @@ public static class ProductEndpointExtensions
             .Produces<CreatedResponse<Guid>>(StatusCodes.Status201Created)
             .Produces<ValidationErrorResponse>(StatusCodes.Status400BadRequest);
 
-        group.MapPut("{id:guid}", async ([FromBody] UpdatePackageCommand command,
+        group.MapPut("{id:guid}", async ([FromBody] UpdateProductCommand command,
                 [FromRoute] Guid id,
                 IMessageBus bus,
                 CancellationToken cancellationToken) =>
             {
-                command.PackageId = id;
+                command.ProductId = id;
 
                 await bus.InvokeAsync(command, cancellationToken);
                 return Results.NoContent();
             })
-            .AddEndpointFilter<ValidationEndpointFilter<UpdatePackageCommand>>()
+            .AddEndpointFilter<ValidationEndpointFilter<UpdateProductCommand>>()
             .Produces(StatusCodes.Status204NoContent)
             .Produces<ValidationErrorResponse>(StatusCodes.Status400BadRequest)
             .Produces<NotFoundErrorResponse>(StatusCodes.Status404NotFound);
 
-        group.MapPost("calculate-price", async ([FromBody] CalculatePackagePriceCommand command,
+        group.MapPost("calculate-price", async ([FromBody] CalculateProductPriceCommand command,
                 IMessageBus bus,
                 CancellationToken cancellationToken) =>
             {
-                var result = await bus.InvokeAsync<PackagePriceCalculationResult>(command, cancellationToken);
+                var result = await bus.InvokeAsync<ProductPriceCalculationResult>(command, cancellationToken);
                 return Results.Ok(result);
             })
             .AddEndpointFilter<ValidationEndpointFilter<CalculateProductPriceCommand>>()
@@ -67,7 +67,7 @@ public static class ProductEndpointExtensions
                 IMessageBus bus,
                 CancellationToken cancellationToken) =>
             {
-                var command = new ArchivePackageCommand(id);
+                var command = new ArchiveProductCommand(id);
                 await bus.InvokeAsync(command, cancellationToken);
                 return Results.NoContent();
             })

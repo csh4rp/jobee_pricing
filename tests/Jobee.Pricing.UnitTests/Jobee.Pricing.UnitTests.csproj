@@ -2,6 +2,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Jobee.Pricing.Application\Jobee.Pricing.Application.csproj" />
     <ProjectReference Include="..\..\src\Jobee.Pricing.Domain\Jobee.Pricing.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Jobee.Pricing.Infrastructure\Jobee.Pricing.Infrastructure.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="NSubstitute" />
