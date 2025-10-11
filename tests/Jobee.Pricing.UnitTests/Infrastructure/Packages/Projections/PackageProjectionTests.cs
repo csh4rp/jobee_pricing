@@ -1,49 +1,23 @@
+using AwesomeAssertions;
 using JasperFx.Events;
-using JasperFx.Events.Daemon;
 using Jobee.Pricing.Domain.Common;
 using Jobee.Pricing.Domain.Common.ValueObjects;
 using Jobee.Pricing.Domain.Packages;
-using Jobee.Pricing.Domain.Products;
 using Jobee.Pricing.Infrastructure.Packages.Projections;
-using NSubstitute;
-using AwesomeAssertions;
 
 namespace Jobee.Pricing.UnitTests.Infrastructure.Packages.Projections;
 
-public class PackageProjectionTests
+public class PackageProjectionApplyTests
 {
-    private static IEvent<T> BuildEvent<T>(T data, Guid streamId, DateTimeOffset? timestamp = null) where T : notnull
-    {
-        var ev = Substitute.For<IEvent<T>>();
-        ev.Data.Returns(data);
-        ev.StreamId.Returns(streamId);
-        ev.Timestamp.Returns(timestamp ?? DateTimeOffset.UtcNow);
-        return ev;
-    }
-
     [Fact]
-    public void ShouldReturnNothing_WhenNoCreatedEventOnNewStream()
+    public void ShouldInitializeSnapshot_WhenApplyPackageCreated()
     {
-        var projection = new PackageProjection();
-        var (snapshot, action) = projection.DetermineAction(null, Guid.NewGuid(), []);
-        action.Should().Be(ActionType.Nothing);
-        snapshot.Should().BeNull();
-    }
-
-    [Fact]
-    public void ShouldCreateSnapshot_WhenOnPackageCreatedEventIsDispatched()
-    {
-        var projection = new PackageProjection();
         var packageId = Guid.NewGuid();
         var productId = Guid.NewGuid();
-        var prices = new List<Price>
-        {
-            new(Guid.NewGuid(), new DateTimeRange(), new Money(10, Currency.PLN))
-        };
-
+        var prices = new List<Price> { new(Guid.NewGuid(), new DateTimeRange(), new Money(10, Currency.PLN)) };
         var @event = new PackageCreated
         {
-            PackageId = packageId,
+            Id = packageId,
             ProductId = productId,
             Name = "Pkg-1",
             Description = "Desc",
@@ -51,149 +25,131 @@ public class PackageProjectionTests
             Quantity = 3,
             Prices = prices
         };
-        var eventWrapper = BuildEvent(@event, packageId);
-
-        var (snapshot, action) = projection.DetermineAction(null, packageId, new List<IEvent> { eventWrapper });
-
-        action.Should().Be(ActionType.Store);
-        snapshot.Should().NotBeNull();
-        snapshot.Id.Should().Be(packageId);
+        
+        var wrappedEvent = CreateWrappedEvent(@event);
+        
+        var snapshot = PackageProjection.Create(wrappedEvent);
+        
+        snapshot.PackageId.Should().Be(packageId);
         snapshot.ProductId.Should().Be(productId);
-        snapshot.Name.Should().Be(@event.Name);
-        snapshot.Description.Should().Be(@event.Description);
+        snapshot.PackageName.Should().Be(@event.Name);
+        snapshot.PackageDescription.Should().Be(@event.Description);
         snapshot.IsActive.Should().BeTrue();
         snapshot.Quantity.Should().Be(@event.Quantity);
-        snapshot.Prices.Should().HaveCount(@event.Prices.Count);
-        snapshot.CreatedAt.Should().Be(eventWrapper.Timestamp);
-        snapshot.LastModifiedAt.Should().BeNull();
+        snapshot.Prices.Should().HaveCount(prices.Count);
+        snapshot.Prices[0].Id.Should().Be(@event.Prices[0].Id);
+        snapshot.Prices[0].DateTimeRange.Should().Be(@event.Prices[0].DateTimeRange);
+        snapshot.Prices[0].Value.Should().Be(@event.Prices[0].Value);
+        snapshot.CreatedAt.Should().Be(wrappedEvent.Timestamp);
     }
 
     [Fact]
-    public void ShouldUpdateFields_OnNameAndDescriptionAndActivationChanges()
+    public void ShouldUpdateName_WhenApplyPackageNameChanged()
     {
-        var projection = new PackageProjection();
-        var packageId = Guid.NewGuid();
-        var productId = Guid.NewGuid();
-        var created = BuildEvent(new PackageCreated
-        {
-            PackageId = packageId,
-            ProductId = productId,
-            Name = "Pkg-1",
-            Description = "Desc",
-            IsActive = false,
-            Quantity = 1,
-            Prices = new List<Price>()
-        }, packageId, DateTimeOffset.UtcNow.AddMinutes(-10));
-
-        var (snapshot, _) = projection.DetermineAction(null, packageId, new List<IEvent> { (IEvent)created });
-        snapshot!.LastModifiedAt.Should().BeNull();
-
-        var nameChanged = BuildEvent(new PackageNameChanged("New Name"), packageId, DateTimeOffset.UtcNow.AddMinutes(-9));
-        var descriptionChanged = BuildEvent(new PackageDescriptionChanged("New Desc"), packageId, DateTimeOffset.UtcNow.AddMinutes(-8));
-        var activated = BuildEvent(new PackageActivated(), packageId, DateTimeOffset.UtcNow.AddMinutes(-7));
-        var deactivated = BuildEvent(new PackageDeactivated(), packageId, DateTimeOffset.UtcNow.AddMinutes(-6));
-
-        (snapshot, _) = projection.DetermineAction(snapshot, packageId, new List<IEvent>
-        {
-            nameChanged,
-            descriptionChanged,
-            activated,
-            deactivated
-        });
-
-        snapshot.Should().NotBeNull();
-        snapshot.Name.Should().Be("New Name");
-        snapshot.Description.Should().Be("New Desc");
-        snapshot.IsActive.Should().BeFalse(); // deactivated last
-        snapshot.LastModifiedAt.Should().Be(deactivated.Timestamp);
+        var snapshot = new PackageProjection { PackageName = "Old" };
+        var @event = new PackageNameChanged("NewName");
+        var wrappedEvent = CreateWrappedEvent(@event);
+        
+        PackageProjection.Apply(wrappedEvent, snapshot);
+        
+        snapshot.PackageName.Should().Be(@event.Name);
+        snapshot.LastModifiedAt.Should().Be(wrappedEvent.Timestamp);
     }
 
     [Fact]
-    public void ShouldHandlePriceLifecycle()
+    public void ShouldUpdateDescription_WhenApplyPackageDescriptionChanged()
     {
-        var projection = new PackageProjection();
-        var packageId = Guid.NewGuid();
-        var created = BuildEvent(new PackageCreated
-        {
-            PackageId = packageId,
-            ProductId = Guid.NewGuid(),
-            Name = "Pkg-1",
-            Description = "Desc",
-            IsActive = true,
-            Quantity = 1,
-            Prices = new List<Price>()
-        }, packageId);
+        var snapshot = new PackageProjection { PackageDescription = "OldDesc" };
+        var @event = new PackageDescriptionChanged("NewDesc");
+        var wrappedEvent = CreateWrappedEvent(@event);
+        
+        PackageProjection.Apply(wrappedEvent, snapshot);
+        
+        snapshot.PackageDescription.Should().Be(@event.Description);
+        snapshot.LastModifiedAt.Should().Be(wrappedEvent.Timestamp);
+    }
 
-        var (snapshot, _) = projection.DetermineAction(null, packageId, new List<IEvent> { (IEvent)created });
+    [Fact]
+    public void ShouldSetIsActiveTrue_WhenApplyPackageActivated()
+    {
+        var snapshot = new PackageProjection { IsActive = false };
+        var @event = new PackageActivated();
+        var wrappedEvent = CreateWrappedEvent(@event);
+        
+        PackageProjection.Apply(wrappedEvent, snapshot);
+        
+        snapshot.IsActive.Should().BeTrue();
+        snapshot.LastModifiedAt.Should().Be(wrappedEvent.Timestamp);
+    }
 
+    [Fact]
+    public void ShouldSetIsActiveFalse_WhenApplyPackageDeactivated()
+    {
+        var snapshot = new PackageProjection { IsActive = true };
+        var @event = new PackageDeactivated();
+        var wrappedEvent = CreateWrappedEvent(@event);
+        
+        PackageProjection.Apply(wrappedEvent, snapshot);
+        
+        snapshot.IsActive.Should().BeFalse();
+        snapshot.LastModifiedAt.Should().Be(wrappedEvent.Timestamp);
+    }
+
+    [Fact]
+    public void ShouldAddPrice_WhenApplyPackagePriceCreated()
+    {
+        var snapshot = new PackageProjection { Prices = new List<Price>() };
         var priceId = Guid.NewGuid();
-        var priceCreated = BuildEvent(new PackagePriceCreated(priceId, new DateTimeRange(), new Money(10, Currency.PLN)), packageId, DateTimeOffset.UtcNow.AddMinutes(1));
-        (snapshot, _) = projection.DetermineAction(snapshot, packageId, new List<IEvent> { (IEvent)priceCreated });
+        var @event = new PackagePriceCreated(priceId, new DateTimeRange(), new Money(10, Currency.PLN));
+        var wrappedEvent = CreateWrappedEvent(@event);
+        
+        PackageProjection.Apply(wrappedEvent, snapshot);
+        
+        snapshot.Prices.Should().ContainSingle(p => p.Id == priceId 
+                                                    && p.DateTimeRange == @event.DateTimeRange
+                                                    && p.Value == @event.Value);
+        snapshot.LastModifiedAt.Should().Be(wrappedEvent.Timestamp);
+    }
 
-        snapshot!.Prices.Should().HaveCount(1);
-        snapshot.Prices[0].Money.Amount.Should().Be(10);
+    [Fact]
+    public void ShouldUpdatePrice_WhenApplyPackagePriceChanged()
+    {
+        var priceId = Guid.NewGuid();
+        var snapshot = new PackageProjection
+        {
+            Prices = [new(priceId, new DateTimeRange(), new Money(5, Currency.PLN))]
+        };
+        var @event = new PackagePriceChanged(priceId, new DateTimeRange(), new Money(15, Currency.PLN));
+        var wrappedEvent = CreateWrappedEvent(@event);
+        
+        PackageProjection.Apply(wrappedEvent, snapshot);
+        
+        snapshot.Prices.Should().ContainSingle(p => p.Id == priceId 
+                                                    && p.DateTimeRange == @event.DateTimeRange
+                                                    && p.Value == @event.Value);
+        snapshot.LastModifiedAt.Should().Be(wrappedEvent.Timestamp);
+    }
 
-        var priceChanged = BuildEvent(new PackagePriceChanged(priceId, new DateTimeRange(), new Money(12, Currency.PLN)), packageId, DateTimeOffset.UtcNow.AddMinutes(2));
-        (snapshot, _) = projection.DetermineAction(snapshot, packageId, new List<IEvent> { (IEvent)priceChanged });
-        snapshot.Prices[0].Money.Amount.Should().Be(12);
-
-        var priceRemoved = BuildEvent(new PackagePriceRemoved(priceId, new DateTimeRange(), new Money(12, Currency.PLN)), packageId, DateTimeOffset.UtcNow.AddMinutes(3));
-        (snapshot, _) = projection.DetermineAction(snapshot, packageId, new List<IEvent> { (IEvent)priceRemoved });
+    [Fact]
+    public void ShouldRemovePrice_WhenApplyPackagePriceRemoved()
+    {
+        var priceId = Guid.NewGuid();
+        var snapshot = new PackageProjection
+        {
+            Prices = [new(priceId, new DateTimeRange(), new Money(5, Currency.PLN))]
+        };
+        var @event = new PackagePriceRemoved(priceId, new DateTimeRange(), new Money(5, Currency.PLN));
+        var wrappedEvent = CreateWrappedEvent(@event);
+        
+        PackageProjection.Apply(wrappedEvent, snapshot);
+        
         snapshot.Prices.Should().BeEmpty();
+        snapshot.LastModifiedAt.Should().Be(wrappedEvent.Timestamp);
     }
 
-    [Fact]
-    public void ShouldUpdateProductName_WhenMatchingProductStreamEvent()
+    private static Event<T> CreateWrappedEvent<T>(T data) where T : notnull => new(data)
     {
-        var projection = new PackageProjection();
-        var packageId = Guid.NewGuid();
-        var productId = Guid.NewGuid();
-        var created = BuildEvent(new PackageCreated
-        {
-            PackageId = packageId,
-            ProductId = productId,
-            Name = "Pkg-1",
-            Description = "Desc",
-            IsActive = true,
-            Quantity = 1,
-            Prices = new List<Price>()
-        }, packageId);
-
-        var (snapshot, _) = projection.DetermineAction(null, packageId, new List<IEvent> { (IEvent)created });
-        snapshot!.ProductName.Should().BeEmpty();
-
-        var productNameChangedDifferent = BuildEvent(new ProductNameChanged("Other Product"), Guid.NewGuid());
-        (snapshot, _) = projection.DetermineAction(snapshot, packageId, new List<IEvent> { (IEvent)productNameChangedDifferent });
-        snapshot.ProductName.Should().BeEmpty();
-
-        var productNameChanged = BuildEvent(new ProductNameChanged("Main Product"), productId);
-        (snapshot, _) = projection.DetermineAction(snapshot, packageId, new List<IEvent> { (IEvent)productNameChanged });
-        snapshot.ProductName.Should().Be("Main Product");
-        snapshot.LastModifiedAt.Should().BeNull(); // product name change does not modify LastModifiedAt
-    }
-
-    [Fact]
-    public void ShouldDeleteSnapshot_OnArchive()
-    {
-        var projection = new PackageProjection();
-        var packageId = Guid.NewGuid();
-        var created = BuildEvent(new PackageCreated
-        {
-            PackageId = packageId,
-            ProductId = Guid.NewGuid(),
-            Name = "Pkg-1",
-            Description = "Desc",
-            IsActive = true,
-            Quantity = 1,
-            Prices = new List<Price>()
-        }, packageId);
-
-        var (snapshot, _) = projection.DetermineAction(null, packageId, new List<IEvent> { (IEvent)created });
-
-        var archived = BuildEvent(new PackageArchived(), packageId);
-        var (deletedSnapshot, action) = projection.DetermineAction(snapshot, packageId, new List<IEvent> { (IEvent)archived });
-
-        action.Should().Be(ActionType.Delete);
-        deletedSnapshot.Should().BeNull();
-    }
+        Id = Guid.NewGuid(),
+        Timestamp = new DateTimeOffset(2025, 1, 1, 12, 0, 0, TimeSpan.Zero)
+    };
 }

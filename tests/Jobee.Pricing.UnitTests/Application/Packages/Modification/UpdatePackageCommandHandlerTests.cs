@@ -72,7 +72,7 @@ public class UpdatePackageCommandHandlerTests
             && p.IsActive == command.IsActive
             && p.Quantity == command.Quantity
             && p.Prices.Count == command.Prices.Count
-            && p.Prices.Any(pr => pr.Id == command.Prices[1].Id && pr.Money.Amount == command.Prices[1].Amount)
+            && p.Prices.Any(pr => pr.Id == command.Prices[1].Id && pr.Value.Amount == command.Prices[1].Amount)
             ), Arg.Any<CancellationToken>());
     }
 }

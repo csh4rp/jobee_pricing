@@ -48,7 +48,7 @@ public class PackageRepository : IPackageRepository
     public async Task<bool> ExistsForProductAsync(Guid productId, CancellationToken cancellationToken)
     {
         await using var session = _documentStore.LightweightSession(new SessionOptions());
-        return await session.DocumentStore.QuerySession().Query<PackageProjectionModel>()
+        return await session.DocumentStore.QuerySession().Query<PackageProjection>()
             .AnyAsync(p => p.ProductId == productId, cancellationToken);
     }
 }

@@ -18,7 +18,7 @@ public class CalculateProductPriceCommandHandler
         var price = product.GetPrice(timeProvider.GetUtcNow());
         var currency = Enum.Parse<Currency>(request.Currency.ToString(), true);
 
-        var calculatedPrice = await currencyConverter.ConvertAsync(price.Money, currency, cancellationToken);
+        var calculatedPrice = await currencyConverter.ConvertAsync(price.Value, currency, cancellationToken);
 
         return new ProductPriceCalculationResult(calculatedPrice.Amount, request.Currency);
     }

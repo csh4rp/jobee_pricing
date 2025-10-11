@@ -4,7 +4,7 @@ namespace Jobee.Pricing.Domain.Packages;
 
 public record PackageCreated
 {
-    public required Guid PackageId { get; init; }
+    public required Guid Id { get; init; }
     
     public required Guid ProductId { get; init; }
     

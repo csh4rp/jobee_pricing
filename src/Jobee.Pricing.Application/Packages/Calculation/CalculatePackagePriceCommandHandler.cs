@@ -18,7 +18,7 @@ public class CalculatePackagePriceCommandHandler
         var price = package.GetPrice(timeProvider.GetUtcNow());
         
         var currency = Enum.Parse<Currency>(command.Currency.ToString(), true);
-        var convertedPrice = await currencyConverter.ConvertAsync(price.Money, currency, cancellationToken);
+        var convertedPrice = await currencyConverter.ConvertAsync(price.Value, currency, cancellationToken);
 
         return new PackagePriceCalculationResult
         {

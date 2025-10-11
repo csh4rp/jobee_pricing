@@ -6,19 +6,19 @@ public record Price
 
     public DateTimeRange DateTimeRange { get; init; }
 
-    public Money Money { get; init; }
+    public Money Value { get; init; }
 
     public bool IsDefault => DateTimeRange.StartsAt == null && DateTimeRange.EndsAt == null;
 
-    public Price(Guid id, DateTimeRange dateTimeRange, Money money)
+    public Price(Guid id, DateTimeRange dateTimeRange, Money value)
     {
         Id = id;
         DateTimeRange = dateTimeRange;
-        Money = money;
+        Value = value;
         
     }
     
-    public Price(DateTimeRange dateTimeRange, Money money) : this(Guid.CreateVersion7(), dateTimeRange, money)
+    public Price(DateTimeRange dateTimeRange, Money value) : this(Guid.CreateVersion7(), dateTimeRange, value)
     {
     }
 }

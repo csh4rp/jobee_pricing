@@ -43,7 +43,7 @@ public class ProductTests
         @event.Name.Should().Be(product.Name);
         @event.IsActive.Should().Be(product.IsActive);
         @event.Prices.Should().HaveCount(1);
-        @event.Prices[0].Money.Amount.Should().Be(100);
+        @event.Prices[0].Value.Amount.Should().Be(100);
         @event.Prices[0].DateTimeRange.StartsAt.Should().BeNull();
         @event.Prices[0].DateTimeRange.EndsAt.Should().BeNull();
     }
@@ -102,13 +102,13 @@ public class ProductTests
         var priceCreatedEvent = (ProductPriceCreated?)events.FirstOrDefault(e => e is ProductPriceCreated);
         priceCreatedEvent.Should().NotBeNull();
         priceCreatedEvent.Id.Should().Be(newPriceId);
-        priceCreatedEvent.Money.Amount.Should().Be(100);
+        priceCreatedEvent.Price.Amount.Should().Be(100);
         priceCreatedEvent.DateTimeRange.Should().Be(new DateTimeRange(DateTimeOffset.UtcNow.Date.AddDays(-1), null));
 
         var priceChangedEvent = (ProductPriceChanged?)events.FirstOrDefault(e => e is ProductPriceChanged);
         priceChangedEvent.Should().NotBeNull();
         priceChangedEvent.Id.Should().Be(DefaultPriceId);
-        priceChangedEvent.Money.Amount.Should().Be(99);
+        priceChangedEvent.Value.Amount.Should().Be(99);
         priceChangedEvent.DateTimeRange.Should().Be(new DateTimeRange());
         
         var priceRemovedEvent = (ProductPriceRemoved?)events.FirstOrDefault(e => e is ProductPriceRemoved);
@@ -140,7 +140,7 @@ public class ProductTests
     {
         var @event = new ProductCreated
         {
-            ProductId = DefaultProductId,
+            Id = DefaultProductId,
             Name = "Test Product",
             Description = "Description",
             IsActive = true,
@@ -161,7 +161,7 @@ public class ProductTests
         
         var product = new Product(@event);
         
-        product.Id.Should().Be(@event.ProductId);
+        product.Id.Should().Be(@event.Id);
         product.Name.Should().Be(@event.Name);
         product.Description.Should().Be(@event.Description);
         product.Attributes.Should().Be(@event.Attributes);
@@ -169,7 +169,7 @@ public class ProductTests
         product.IsActive.Should().Be(@event.IsActive);
         product.Prices.Should().HaveCount(1);
         product.Prices[0].Id.Should().Be(@event.Prices[0].Id);
-        product.Prices[0].Money.Amount.Should().Be(@event.Prices[0].Money.Amount);
+        product.Prices[0].Value.Amount.Should().Be(@event.Prices[0].Value.Amount);
         product.Prices[0].DateTimeRange.Should().Be(@event.Prices[0].DateTimeRange);
     }
     
@@ -246,7 +246,7 @@ public class ProductTests
 
         // Assert
         product.Prices.Should().Contain(p => p.Id == @event.Id
-            && p.Money.Amount == @event.Money.Amount
+            && p.Value.Amount == @event.Value.Amount
             && p.DateTimeRange == @event.DateTimeRange);
     }
     
@@ -278,10 +278,10 @@ public class ProductTests
         
         // Assert
         currentPrice.Id.Should().Be(DefaultPriceId);
-        currentPrice.Money.Amount.Should().Be(DefaultPriceAmount);
+        currentPrice.Value.Amount.Should().Be(DefaultPriceAmount);
         
         futurePrice.Id.Should().Be(FuturePriceId);
-        futurePrice.Money.Should().Be(FuturePrice);
+        futurePrice.Value.Should().Be(FuturePrice);
     }
     
     [Fact]

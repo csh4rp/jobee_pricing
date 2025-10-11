@@ -68,12 +68,12 @@ public class Package : Entity<Guid>
             {
                 _prices.Remove(existingPrice);
                 _prices.Add(price);
-                EnqueueEvent(new PackagePriceChanged(existingPrice.Id, existingPrice.DateTimeRange, price.Money));
+                EnqueueEvent(new PackagePriceChanged(existingPrice.Id, existingPrice.DateTimeRange, price.Value));
             }
             else if (existingPrice is null)
             {
                 _prices.Add(price);
-                EnqueueEvent(new PackagePriceCreated(price.Id, price.DateTimeRange, price.Money));
+                EnqueueEvent(new PackagePriceCreated(price.Id, price.DateTimeRange, price.Value));
             }
         }
 
@@ -84,7 +84,7 @@ public class Package : Entity<Guid>
             if (isPriceRemoved)
             {
                 pricesToRemove.Add(price.Id);
-                EnqueueEvent(new PackagePriceRemoved(price.Id, price.DateTimeRange, price.Money));
+                EnqueueEvent(new PackagePriceRemoved(price.Id, price.DateTimeRange, price.Value));
             }
         }
 
@@ -93,7 +93,7 @@ public class Package : Entity<Guid>
     
     public void Apply(PackageCreated @event)
     {
-        Id = @event.PackageId;
+        Id = @event.Id;
         ProductId = @event.ProductId;
         Name = @event.Name;
         Description = @event.Description;
@@ -133,7 +133,7 @@ public class Package : Entity<Guid>
         _prices.Add(new Price(
             @event.Id,
             @event.DateTimeRange,
-            @event.Money));
+            @event.Value));
     }
     
     public void Apply(PackagePriceRemoved @event)
@@ -150,7 +150,7 @@ public class Package : Entity<Guid>
         _prices.Add(new Price(
             @event.Id,
             @event.DateTimeRange,
-            @event.Money));
+            @event.Value));
     }
 
     public Price GetPrice(DateTimeOffset timestamp)

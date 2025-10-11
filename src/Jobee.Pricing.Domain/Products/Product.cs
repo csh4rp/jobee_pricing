@@ -22,13 +22,13 @@ public class Product : Entity<Guid>
     
     public Product(ProductCreated @event)
     {
-        Id = @event.ProductId;
+        Id = @event.Id;
         IsActive = @event.IsActive;
         Name = @event.Name;
         Description = @event.Description;
         FeatureFlags = @event.FeatureFlags;
         Attributes = @event.Attributes;
-        _prices = [.. @event.Prices.Select(p => new Price(p.Id, p.DateTimeRange, p.Money))];
+        _prices = [.. @event.Prices.Select(p => new Price(p.Id, p.DateTimeRange, p.Value))];
     }
     
     public Product(string name, string description, bool isActive,
@@ -46,7 +46,7 @@ public class Product : Entity<Guid>
         _prices = prices as List<Price> ?? [.. prices];
         EnqueueEvent(new ProductCreated
         {
-            ProductId = Id,
+            Id = Id,
             Name = Name,
             Description = Description,
             IsActive = IsActive,
@@ -97,11 +97,11 @@ public class Product : Entity<Guid>
             var existingPrice = _prices.FirstOrDefault(p => p.Id == price.Id);
             if (existingPrice is not null && !existingPrice.Equals(price))
             {
-                EnqueueEvent(new ProductPriceChanged(existingPrice.Id, existingPrice.DateTimeRange, price.Money));
+                EnqueueEvent(new ProductPriceChanged(existingPrice.Id, existingPrice.DateTimeRange, price.Value));
             }
             else if (existingPrice is null)
             {
-                EnqueueEvent(new ProductPriceCreated(price.Id, price.DateTimeRange, price.Money));
+                EnqueueEvent(new ProductPriceCreated(price.Id, price.DateTimeRange, price.Value));
             }
         }
 
@@ -110,7 +110,7 @@ public class Product : Entity<Guid>
             var isPriceRemoved = prices.All(p => p.Id != price.Id);
             if (isPriceRemoved)
             {
-                EnqueueEvent(new ProductPriceRemoved(price.Id, price.DateTimeRange, price.Money));
+                EnqueueEvent(new ProductPriceRemoved(price.Id, price.DateTimeRange, price.Value));
             }
         }
     }
@@ -157,7 +157,7 @@ public class Product : Entity<Guid>
         _prices.Add(new Price(
             @event.Id,
             @event.DateTimeRange,
-            @event.Money));
+            @event.Price));
     }
     
     public void Apply(ProductPriceRemoved @event)
@@ -174,7 +174,7 @@ public class Product : Entity<Guid>
         _prices.Add(new Price(
             @event.Id,
             @event.DateTimeRange,
-            @event.Money));
+            @event.Value));
     }
     
     public void Apply(ProductActivated _)

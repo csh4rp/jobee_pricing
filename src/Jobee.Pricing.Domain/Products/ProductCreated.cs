@@ -4,7 +4,7 @@ namespace Jobee.Pricing.Domain.Products;
 
 public record ProductCreated
 {
-    public required Guid ProductId { get; init; }
+    public required Guid Id { get; init; }
     
     public required string Name { get; init; }
     

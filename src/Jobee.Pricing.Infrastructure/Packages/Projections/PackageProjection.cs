@@ -10,98 +10,93 @@ using Marten.Events.Projections;
 
 namespace Jobee.Pricing.Infrastructure.Packages.Projections;
 
-public class PackageProjection : MultiStreamProjection<PackageProjectionModel, Guid>
+public class PackageProjection : SingleStreamProjection<PackageProjection, Guid>
 {
+    public Guid PackageId { get; set; }
+
+    public Guid ProductId { get; set; }
+
+    public string PackageName { get; set; } = null!;
+
+    public string PackageDescription { get; set; } = null!;
+
+    public bool IsActive { get; set; }
+    
+    public int Quantity { get; set; }
+    
+    public List<Price> Prices { get; set; } = [];
+
+    public DateTimeOffset CreatedAt { get; set; }
+    
+    public DateTimeOffset? LastModifiedAt { get; set; }
+    
     public PackageProjection()
     {
         Name = "Package";
     }
 
-    public override (PackageProjectionModel?, ActionType) DetermineAction(PackageProjectionModel? snapshot,
-        Guid identity,
-        IReadOnlyList<IEvent> events)
+    public static void Apply(IEvent<PackageNameChanged> @event, PackageProjection snapshot)
     {
-        if (snapshot is null)
+        snapshot.PackageName = @event.Data.Name;
+        snapshot.LastModifiedAt = @event.Timestamp;
+    }
+
+    public static void Apply(IEvent<PackageDescriptionChanged> @event, PackageProjection snapshot)
+    {
+        snapshot.PackageDescription = @event.Data.Description;
+        snapshot.LastModifiedAt = @event.Timestamp;
+    }
+
+    public static void Apply(IEvent<PackageActivated> @event, PackageProjection snapshot)
+    {
+        snapshot.IsActive = true;
+        snapshot.LastModifiedAt = @event.Timestamp;
+    }
+
+    public static void Apply(IEvent<PackageDeactivated> @event, PackageProjection snapshot)
+    {
+        snapshot.IsActive = false;
+        snapshot.LastModifiedAt = @event.Timestamp;
+    }
+
+    public static void Apply(IEvent<PackagePriceCreated> @event, PackageProjection snapshot)
+    {
+        snapshot.Prices.Add(new Price(@event.Data.Id, @event.Data.DateTimeRange, @event.Data.Value));
+        snapshot.LastModifiedAt = @event.Timestamp;
+    }
+
+    public static void Apply(IEvent<PackagePriceChanged> @event, PackageProjection snapshot)
+    {
+        var index = snapshot.Prices.FindIndex(p => p.Id == @event.Data.Id);
+        if (index != -1)
         {
-            var createdEvent = events.OfType<IEvent<PackageCreated>>().FirstOrDefault();
-            if (createdEvent is not null)
-            {
-                var model = new PackageProjectionModel
-                {
-                    Id = createdEvent.StreamId,
-                    ProductId = createdEvent.Data.ProductId,
-                    Name = createdEvent.Data.Name,
-                    Description = createdEvent.Data.Description,
-                    IsActive = createdEvent.Data.IsActive,
-                    Quantity = createdEvent.Data.Quantity,
-                    Prices = [.. createdEvent.Data.Prices],
-                    ProductName = string.Empty, // initialized; will be updated if ProductNameChanged event arrives
-                    CreatedAt = createdEvent.Timestamp,
-                };
-                return (model, ActionType.Store);
-            }
-
-            return (null, ActionType.Nothing);
+            snapshot.Prices[index] = new Price(@event.Data.Id, @event.Data.DateTimeRange, @event.Data.Value);
+            snapshot.LastModifiedAt = @event.Timestamp;
         }
+    }
 
-        foreach (var @event in events)
+    public static void Apply(IEvent<PackagePriceRemoved> @event, PackageProjection snapshot)
+    {
+        var index = snapshot.Prices.FindIndex(p => p.Id == @event.Data.Id);
+        if (index != -1)
         {
-            switch (@event)
-            {
-                case IEvent<PackageNameChanged> nameChanged:
-                    snapshot.Name = nameChanged.Data.Name;
-                    snapshot.LastModifiedAt = nameChanged.Timestamp;
-                    break;
-                case IEvent<PackageDescriptionChanged> descriptionChanged:
-                    snapshot.Description = descriptionChanged.Data.Description;
-                    snapshot.LastModifiedAt = descriptionChanged.Timestamp;
-                    break;
-                case IEvent<PackageActivated> activated:
-                    snapshot.IsActive = true;
-                    snapshot.LastModifiedAt = activated.Timestamp;
-                    break;
-                case IEvent<PackageDeactivated> deactivated:
-                    snapshot.IsActive = false;
-                    snapshot.LastModifiedAt = deactivated.Timestamp;
-                    break;
-                case IEvent<PackagePriceCreated> priceCreated:
-                    snapshot.Prices.Add(new Price(priceCreated.Data.Id, priceCreated.Data.DateTimeRange,
-                        priceCreated.Data.Money));
-                    snapshot.LastModifiedAt = priceCreated.Timestamp;
-                    break;
-                case IEvent<PackagePriceChanged> priceChanged:
-                    var index = snapshot.Prices.FindIndex(p => p.Id == priceChanged.Data.Id);
-                    if (index != -1)
-                    {
-                        snapshot.Prices[index] = new Price(priceChanged.Data.Id, priceChanged.Data.DateTimeRange,
-                            priceChanged.Data.Money);
-                        snapshot.LastModifiedAt = priceChanged.Timestamp;
-                    }
-
-                    break;
-                case IEvent<PackagePriceRemoved> priceRemoved:
-                    var removeIndex = snapshot.Prices.FindIndex(p => p.Id == priceRemoved.Data.Id);
-                    if (removeIndex != -1)
-                    {
-                        snapshot.Prices.RemoveAt(removeIndex);
-                        snapshot.LastModifiedAt = priceRemoved.Timestamp;
-                    }
-
-                    break;
-                case IEvent<ProductNameChanged> productNameChanged:
-                    if (productNameChanged.StreamId == snapshot.ProductId)
-                    {
-                        snapshot.ProductName = productNameChanged.Data.Name;
-                    }
-
-                    break;
-                case IEvent<PackageArchived> archived:
-                    return (null, ActionType.Delete);
-                default:
-                    break;
-            }
+            snapshot.Prices.RemoveAt(index);
+            snapshot.LastModifiedAt = @event.Timestamp;
         }
-
-        return (snapshot, ActionType.Store);
+    }
+    public static PackageProjection Create(IEvent<PackageCreated> packageCreated)
+    {
+        return new PackageProjection
+        {
+            PackageId = packageCreated.Data.Id,
+            ProductId = packageCreated.Data.ProductId,
+            PackageName = packageCreated.Data.Name,
+            PackageDescription = packageCreated.Data.Description,
+            IsActive = packageCreated.Data.IsActive,
+            Quantity = packageCreated.Data.Quantity,
+            Prices = [.. packageCreated.Data.Prices],
+            CreatedAt = packageCreated.Timestamp,
+            LastModifiedAt = null,
+        };
     }
 }

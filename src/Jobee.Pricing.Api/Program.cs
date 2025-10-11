@@ -23,6 +23,7 @@ builder.Host.ApplyJasperFxExtensions();
 var app =  builder.Build();
 
 app.AddProductEndpoints()
+    .AddPackageEndpoints()
     .UseSwagger()
     .UseSwaggerUI();
 
